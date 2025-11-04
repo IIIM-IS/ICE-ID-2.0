@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ICE-ID 2.0 Documentation - Complete Guide</title>
+  <meta name="description" content="Complete documentation for ICE-ID 2.0 - Entity Resolution for Icelandic Historical Census Data" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>" />
+  <style>
+    * { box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', 'Helvetica Neue', Arial, sans-serif;
+      margin: 0;
+      line-height: 1.7;
+      color: #2d3748;
+      background: #fafafa;
+    }
+    
+    header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 60px 20px;
+      text-align: center;
+    }
+    
+    header h1 {
+      margin: 0 0 12px 0;
+      font-size: 2.5em;
+      font-weight: 700;
+    }
+    
+    header p {
+      margin: 0;
+      font-size: 1.2em;
+      opacity: 0.95;
+    }
+    
+    nav {
+      background: white;
+      border-bottom: 1px solid #e2e8f0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 12px 20px;
+    }
+    
+    nav a {
+      color: #667eea;
+      text-decoration: none;
+      margin-right: 20px;
+      font-weight: 600;
+      font-size: 0.95em;
+    }
+    
+    nav a:hover {
+      text-decoration: underline;
+    }
+    
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      background: white;
+    }
+    
+    h2 {
+      font-size: 2em;
+      margin: 48px 0 24px 0;
+      color: #1a202c;
+      border-bottom: 3px solid #667eea;
+      padding-bottom: 8px;
+    }
+    
+    h3 {
+      font-size: 1.5em;
+      margin: 32px 0 16px 0;
+      color: #2d3748;
+    }
+    
+    h4 {
+      font-size: 1.2em;
+      margin: 24px 0 12px 0;
+      color: #4a5568;
+    }
+    
+    p {
+      margin: 16px 0;
+    }
+    
+    ul, ol {
+      margin: 16px 0;
+      padding-left: 28px;
+    }
+    
+    li {
+      margin: 8px 0;
+    }
+    
+    code {
+      background: #f7fafc;
+      color: #e53e3e;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+    }
+    
+    pre {
+      background: #1a202c;
+      color: #e2e8f0;
+      padding: 20px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 20px 0;
+    }
+    
+    pre code {
+      background: none;
+      color: #68d391;
+      padding: 0;
+      font-size: 0.9em;
+    }
+    
+    strong {
+      color: #1a202c;
+      font-weight: 600;
+    }
+    
+    hr {
+      border: none;
+      border-top: 2px solid #e2e8f0;
+      margin: 40px 0;
+    }
+    
+    .emoji-bullet {
+      margin-right: 8px;
+    }
+    
+    footer {
+      background: #1a202c;
+      color: #a0aec0;
+      padding: 32px 20px;
+      text-align: center;
+      margin-top: 60px;
+    }
+    
+    footer a {
+      color: #667eea;
+      text-decoration: none;
+    }
+    
+    footer a:hover {
+      text-decoration: underline;
+    }
+    
+    @media (max-width: 768px) {
+      header h1 { font-size: 1.8em; }
+      h2 { font-size: 1.5em; }
+      h3 { font-size: 1.2em; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📖 ICE-ID 2.0 Documentation</h1>
+    <p>Complete Guide to Entity Resolution for Icelandic Historical Census Data</p>
+  </header>
+
+  <nav>
+    <a href="index.html">← Back to Home</a>
+    <a href="https://github.com/IIIM-IS/ICE-ID-2.0">GitHub</a>
+  </nav>
+
+  <div class="container">
+    <h2 id="introduction">ICE-ID 2.0: Entity Resolution for Icelandic Historical Census Data</h2>
+    
+    <p><strong>ICE-ID</strong> (Icelandic Census Entity IDentification) is a comprehensive entity resolution system designed to link historical census records and identify unique individuals across multiple data sources. The system combines modern machine learning techniques with domain-specific knowledge to handle the unique challenges of Icelandic historical data.</p>
+
+    <h2 id="what-is-iceid">What is ICE-ID?</h2>
+    
+    <p>ICE-ID solves the challenging problem of <strong>entity resolution</strong> (also known as record linkage or deduplication) for Icelandic historical census data. Given thousands of census records with:</p>
+    <ul>
+      <li>Name variations and spelling inconsistencies</li>
+      <li>Missing or incomplete information</li>
+      <li>Family relationships (parents, partners, children)</li>
+      <li>Geographic and temporal information</li>
+    </ul>
+
+    <p>ICE-ID predicts which records refer to the same individual, forming clusters of matched identities. This is critical for:</p>
+    <ul>
+      <li><span class="emoji-bullet">📊</span><strong>Historical demography research</strong> - Understanding population dynamics over time</li>
+      <li><span class="emoji-bullet">👨‍👩‍👧‍👦</span><strong>Genealogical studies</strong> - Reconstructing family trees and lineages</li>
+      <li><span class="emoji-bullet">🔬</span><strong>Social science research</strong> - Analyzing historical social structures and mobility</li>
+    </ul>
+
+    <h2 id="key-features">Key Features</h2>
+    
+    <p>This repository provides a <strong>complete end-to-end system</strong> with:</p>
+    <ul>
+      <li><span class="emoji-bullet">🎯</span><strong>Multiple ML Models</strong> - Train and compare 12+ entity resolution approaches (GBDT, Neural Networks, TF-IDF, Ditto, ZeroER, Random Forest, and more)</li>
+      <li><span class="emoji-bullet">📊</span><strong>Interactive Dashboard</strong> - Streamlit-based UI for training, evaluation, and manual inspection</li>
+      <li><span class="emoji-bullet">✏️</span><strong>Manual Editing Tools</strong> - Inspect and correct predictions with visual graph networks</li>
+      <li><span class="emoji-bullet">📈</span><strong>Comprehensive Evaluation</strong> - Precision metrics, confidence intervals, cluster purity analysis</li>
+      <li><span class="emoji-bullet">🔄</span><strong>Version Control</strong> - Save and track manual edits to predictions</li>
+      <li><span class="emoji-bullet">🌳</span><strong>Genealogical Visualization</strong> - Explore family relationships in interactive tree graphs</li>
+    </ul>
+
+    <h2 id="who-should-use">Who Should Use ICE-ID?</h2>
+    <ul>
+      <li><strong>Researchers</strong> working with historical census data or entity resolution problems</li>
+      <li><strong>Data scientists</strong> developing record linkage systems</li>
+      <li><strong>Genealogists</strong> analyzing Icelandic family histories</li>
+      <li><strong>Historians</strong> studying population dynamics and social structures</li>
+    </ul>
+
+    <hr>
+
+    <h2 id="folder-structure">Folder Structure</h2>
+    
+    <pre><code>.
+├── dashboard
+│   ├── app.py                 # Streamlit app with 3 tabs: Training, Evaluation, Inspect & Edit
+│   ├── ds_io.py               # Data I/O helpers (people/edges/clusters), caching, canonicalization
+│   ├── edits.py               # Edge add/remove + reclustering (Union-Find)
+│   ├── eval_api.py            # Programmatic evaluation of backends (precision, CI, cluster purity, etc.)
+│   ├── graphing.py            # PyVis graph builders: match network & family tree
+│   ├── __init__.py
+│   ├── inspector_tab.py       # Full Inspect/Edit UI, factored out of app.py
+│   └──  train_api.py           # CLI builder + streaming process runner; artifact scanning/priming
+├── raw_data
+│   ├── counties.csv
+│   ├── districts.csv
+│   ├── manntol_einstaklingar_new.csv
+│   ├── parishes.csv
+│   └── people.csv
+└── runs
+    └── hundred_loose_dual
+        └── shard_s0_of_1
+            ├── artifacts.json
+            ├── compare_backends.json
+            ├── gbdt/
+            │   ├── cluster_eval_val_details.csv
+            │   ├── cluster_eval_val.json
+            │   ├── clusters.csv
+            │   ├── edges.csv
+            │   └── matches_gbdt.csv
+            ├── gbdt_metrics.json
+            ├── logreg/
+            │   ├── cluster_eval_val_details.csv
+            │   ├── cluster_eval_val.json
+            │   ├── clusters.csv
+            │   ├── edges.csv
+            │   └── matches_logreg.csv
+            ├── logreg_metrics.json
+            ├── per_row_matches.csv
+            └── threshold_window_samples.csv</code></pre>
+
+    <h3>High-level flow</h3>
+
+    <h4>Training tab (<code>app.py</code> ⇄ <code>train_api.py</code>)</h4>
+    <ul>
+      <li>Builds and runs the full clustering pipeline (<code>python -m other_models.main …</code>, wired via <code>train_api.build_command</code>).</li>
+      <li>Live logs, progress, and metric curves are parsed and displayed as training proceeds.</li>
+      <li><strong>Priming</strong> can re-use heavy precomputed artifacts from another run (blocks/candidates/features).</li>
+      <li><strong>Device toggle</strong> lets you choose <strong>auto / cpu / cuda</strong>; <code>train_api</code> passes <code>--device</code> to the backend and enforces CPU via <code>CUDA_VISIBLE_DEVICES=""</code> when chosen.</li>
+      <li><strong>Real-time progress feedback</strong> with progress bar and status updates showing which model is currently training.</li>
+    </ul>
+
+    <h4>Evaluation tab (<code>app.py</code> ⇄ <code>eval_api.py</code>)</h4>
+    <ul>
+      <li>Loads <code>people.csv</code> + labels (<code>manntol_einstaklingar_new.csv</code>) to construct ground truth.</li>
+      <li>For each backend subfolder (e.g., <code>gbdt/</code>, <code>logreg/</code>), reads <code>edges.csv</code> (+ <code>clusters.csv</code> if present) and computes:
+        <ul>
+          <li>Precision on labeled pairs with <strong>Wilson 95% CI</strong>,</li>
+          <li>counts of novel / semi-novel edges,</li>
+          <li>coverage (nodes touched),</li>
+          <li>cluster purity / size stats if <code>clusters.csv</code> exists.</li>
+        </ul>
+      </li>
+      <li>Auto-interpretation explains metrics in plain language.</li>
+      <li><strong>Real-time progress feedback</strong> with expandable status container showing which backend is currently being analyzed.</li>
+    </ul>
+
+    <h4>Inspect & Edit tab (<code>inspector_tab.py</code> + <code>ds_io.py</code> + <code>graphing.py</code> + <code>edits.py</code>)</h4>
+    <ul>
+      <li>Loads a backend's <code>edges.csv</code> + <code>clusters.csv</code> and <code>raw_data/people.csv</code>.</li>
+      <li>Visualizes:
+        <ul>
+          <li><strong>Match Network</strong> between predicted identities (PyVis).</li>
+          <li><strong>Genealogical Tree</strong> derived from <code>father / mother / partner</code> (PyVis).</li>
+        </ul>
+      </li>
+      <li>Edit tools:
+        <ul>
+          <li><strong>Add link</strong> (merge identities) or <strong>Remove link</strong> (unmerge).</li>
+          <li><strong>Rebuild clusters</strong> from edited edges (Union-Find).</li>
+          <li><strong>Save snapshot</strong> into <code>versions/</code> as a new version (with <code>meta.json</code>, <code>edges.csv</code>, <code>clusters.csv</code>).</li>
+        </ul>
+      </li>
+    </ul>
+
+    <hr>
+
+    <h2 id="quick-start">Quick Start</h2>
+
+    <h3>1) Environment</h3>
+
+    <h4>With Pipenv (recommended)</h4>
+    <pre><code># from repo root
+pipenv install --python 3.10
+pipenv shell
+pip install -U pip
+# install extras you need (streamlit, pandas, pyvis, plotly, etc.)
+pip install streamlit pandas numpy pyvis plotly scikit-learn</code></pre>
+
+    <h4>With pip</h4>
+    <pre><code>python3 -m venv .venv
+source .venv/bin/activate
+pip install -U pip
+pip install -r requirements.txt   # if provided
+# or install packages manually if you're developing</code></pre>
+
+    <h3>2) Launch the dashboard</h3>
+    <p>From the repo root:</p>
+    <pre><code>streamlit run dashboard/app.py</code></pre>
+    <p>or with logs</p>
+    <pre><code>python -m streamlit run dashboard/app.py --logger.level=debug</code></pre>
+
+    <p>The app expects the default data under <code>raw_data/</code> and a sample run under <code>runs/hundred_loose_dual/shard_s0_of_1/</code>. You can override paths in the UI.</p>
+
+    <hr>
+
+    <h2 id="using-dashboard">Using the Dashboard</h2>
+
+    <h3>Training tab</h3>
+    <ul>
+      <li><strong>Data paths</strong>
+        <ul>
+          <li><code>people.csv</code>: main table (id, names, birthyear, sex, parents/partner, etc.).</li>
+          <li><code>labels.csv</code>: <code>manntol_einstaklingar_new.csv</code> (or any file with <code>id</code> → <code>bi_einstaklingur</code> mapping). If your <code>people.csv</code> includes a <code>person</code> column, that takes precedence for ground truth in evaluation.</li>
+        </ul>
+      </li>
+      <li><strong>Core params</strong>
+        <ul>
+          <li><code>backends</code>: which matchers to run (e.g., <code>gbdt,logreg</code>).</li>
+          <li><code>num_shards</code>, <code>shard_id</code>: split and run subsets.</li>
+          <li>Blocking/candidate params: <code>max_block_size</code>, <code>max_pairs_per_block</code>, name prefix lengths, year bucket width, filters, etc.</li>
+        </ul>
+      </li>
+      <li><strong>Device selection</strong>
+        <ul>
+          <li><code>auto</code>: don't force a device; backend decides.</li>
+          <li><code>cpu</code>: passes <code>--device cpu</code> and sets <code>CUDA_VISIBLE_DEVICES=""</code> to avoid CUDA.</li>
+          <li><code>cuda</code>: passes <code>--device cuda</code> (backend should error if no GPU).</li>
+        </ul>
+      </li>
+      <li><strong>Priming</strong>
+        <ul>
+          <li>Point <strong>Source shard dir</strong> to an existing run's shard (e.g., a finished <code>shard_s0_of_1</code>) and <strong>Prime</strong> your <strong>Target shard dir</strong> to copy heavy upstream artifacts (blocks, candidates, features) to speed up re-runs. Model outputs (<code>edges.csv</code>, <code>clusters.csv</code>, etc.) are <em>not</em> copied.</li>
+        </ul>
+      </li>
+      <li><strong>Live view</strong>
+        <ul>
+          <li>Logs stream as the pipeline runs; the app parses "<code>key=value</code>" pairs for loss/accuracy/precision curves and a final JSON summary if the backend prints one.</li>
+        </ul>
+      </li>
+    </ul>
+
+    <h3>Evaluation tab</h3>
+    <ul>
+      <li>Choose:
+        <ul>
+          <li><code>people.csv</code> path,</li>
+          <li><code>labels.csv</code> path,</li>
+          <li><code>Shard directory</code> (the folder that contains your backend subfolders or its own <code>edges.csv</code>/<code>clusters.csv</code>).</li>
+        </ul>
+      </li>
+      <li>Optional: list backends manually (<code>gbdt,logreg</code>), or leave blank to auto-detect.</li>
+      <li>Click <strong>Analyze</strong>. You'll see:
+        <ul>
+          <li>A compact per-backend table,</li>
+          <li>Metric explanations,</li>
+          <li>Auto-interpretation (precision grade, CI tightness, discovery potential, coverage, cluster purity).</li>
+        </ul>
+      </li>
+    </ul>
+
+    <h3>Inspect & Edit tab</h3>
+    <ul>
+      <li><strong>Load sources</strong>
+        <ul>
+          <li>Set <code>people.csv</code>, <code>Run shard directory</code>, and a <code>Versions root</code> for saving snapshots.</li>
+          <li>Optionally load a <strong>saved version</strong> as baseline.</li>
+        </ul>
+      </li>
+      <li><strong>Select a backend</strong>
+        <ul>
+          <li>Dropdown from auto-detected backends under the shard directory.</li>
+        </ul>
+      </li>
+      <li><strong>Cluster view</strong>
+        <ul>
+          <li>Summary comparing predicted cluster to hand labels (<code>person</code>), highlighting:
+            <ul>
+              <li>Anchor (majority GT - ground truth - group),</li>
+              <li>Discrepant (other GT groups),</li>
+              <li>New (no GT).</li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+      <li><strong>Visualizations</strong>
+        <ul>
+          <li><strong>Match Network</strong> (within cluster):
+            <ul>
+              <li>Group nodes by <code>Label Status</code>, <code>Hand-Label (person)</code>, <code>Parish</code>, or <code>Census (heimild)</code>.</li>
+              <li>Control node limits.</li>
+            </ul>
+          </li>
+          <li><strong>Genealogical Tree</strong>:
+            <ul>
+              <li>Build from <code>father/mother/partner</code> relationships around a root or all members.</li>
+              <li>Toggle physics/hierarchical layout; control depth and node limits.</li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+      <li><strong>Editing</strong>
+        <ul>
+          <li><strong>Add link</strong> between two record IDs (within or outside the cluster).</li>
+          <li><strong>Remove link</strong> by selecting from existing in-cluster edges or by specifying any pair (IDs).</li>
+          <li>Each edit <strong>rebuilds clusters</strong> via Union-Find and jumps to the cluster containing your focus record.</li>
+        </ul>
+      </li>
+      <li><strong>Save snapshot</strong>
+        <ul>
+          <li>Writes a new <code>versions/&lt;timestamped_or_named&gt;/</code> with:
+            <ul>
+              <li><code>meta.json</code> (provenance),</li>
+              <li><code>edges.csv</code> (canonicalized),</li>
+              <li><code>clusters.csv</code> (<code>members</code> saved as <code>id1;id2;…</code>).</li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+    </ul>
+
+    <hr>
+
+    <h2 id="data-expectations">Data Expectations</h2>
+    <ul>
+      <li><strong><code>raw_data/people.csv</code></strong> should contain (or the code will create defaults for missing columns):
+        <ul>
+          <li><code>id</code>, <code>heimild</code>, <code>nafn_norm</code>, <code>first_name</code>, <code>middle_name</code>, <code>patronym</code>, <code>surname</code>,</li>
+          <li><code>birthyear</code>, <code>sex</code>, <code>status</code>, <code>marriagestatus</code>, <code>person</code>, <code>partner</code>, <code>father</code>, <code>mother</code>,</li>
+          <li><code>farm</code>, <code>county</code>, <code>parish</code>, <code>district</code>.</li>
+        </ul>
+      </li>
+      <li><strong><code>raw_data/manntol_einstaklingar_new.csv</code></strong> should map <code>id → bi_einstaklingur</code> (if <code>people.person</code> absent).</li>
+      <li>The sample <strong><code>runs/hundred_loose_dual/shard_s0_of_1/</code></strong> contains two backends (<code>gbdt/</code>, <code>logreg/</code>) with <code>edges.csv</code> and <code>clusters.csv</code>.</li>
+    </ul>
+
+    <hr>
+
+    <h2 id="gpu-vs-cpu">GPU vs CPU</h2>
+    <p>In the <strong>Training</strong> tab, pick <strong>Compute device</strong>:</p>
+    <ul>
+      <li><strong>auto</strong>: leave decisions to the backend (default).</li>
+      <li><strong>cpu</strong>: sets <code>--device cpu</code> and <code>CUDA_VISIBLE_DEVICES=""</code> so common DL libraries avoid CUDA.</li>
+      <li><strong>cuda</strong>: sets <code>--device cuda</code>; backend should error if no GPU is available.</li>
+    </ul>
+    <p>This is wired through <code>train_api.build_command(…, device=…)</code> and enforced in <code>run_pipeline_streaming(…, env=…)</code>.</p>
+
+    <hr>
+
+    <h2 id="folder-reference">Folder and File Reference</h2>
+
+    <h3>Top-level</h3>
+    <ul>
+      <li><code>dashboard/</code>: Streamlit app and supporting modules.</li>
+      <li><code>raw_data/</code>: Input CSVs used by the dashboard and pipeline.</li>
+      <li><code>runs/</code>: Outputs from training/evaluation runs (organized by experiment and shard).</li>
+      <li><code>versions/</code> (created by you from the Inspector tab): Saved snapshots of edited results.</li>
+      <li><code>other_models/</code> (if present at repo root): Additional training/eval code not specific to the dashboard.</li>
+    </ul>
+
+    <h3>raw_data/</h3>
+    <ul>
+      <li><code>people.csv</code>
+        <ul>
+          <li>One row per record (census entry). Expected columns (minimum useful set):
+            <ul>
+              <li><code>id</code> (int): unique record id</li>
+              <li><code>first_name</code>, <code>middle_name</code>, <code>patronym</code>, <code>surname</code> (str): normalized lowercase name fields</li>
+              <li><code>birthyear</code> (int), <code>sex</code> (str: e.g., <code>karl</code>, <code>kona</code>)</li>
+              <li><code>person</code> (int or empty): ground-truth person id (cluster label) if available</li>
+              <li><code>father</code>, <code>mother</code>, <code>partner</code> (int or empty): relationship links to other <code>id</code>s</li>
+              <li><code>farm</code>, <code>county</code>, <code>parish</code>, <code>district</code>, <code>heimild</code> (ints): locality/source ids</li>
+            </ul>
+          </li>
+          <li>The loader (<code>ds_io.load_people</code>) coerces types and lowercases strings; missing columns are added as empty if absent.</li>
+        </ul>
+      </li>
+      <li><code>manntol_einstaklingar_new.csv</code>
+        <ul>
+          <li>Ground-truth labels table used during evaluation when <code>people.person</code> is missing.</li>
+          <li>Must contain a mapping from a record id to a cluster/person id (e.g., <code>id</code> → <code>bi_einstaklingur</code>).</li>
+        </ul>
+      </li>
+      <li><code>parishes.csv</code>, <code>districts.csv</code>, <code>counties.csv</code>
+        <ul>
+          <li>Lookup tables. Expected columns include <code>id</code> and <code>name</code> (or similarly named). Used to map ids → human-readable names (e.g., legend labels in graphs).</li>
+        </ul>
+      </li>
+    </ul>
+
+    <h3>runs/</h3>
+    <ul>
+      <li>Structure is typically: <code>runs/&lt;experiment_name&gt;/shard_s&lt;i&gt;_of_&lt;n&gt;/</code>.</li>
+      <li>Within each shard directory you may have one or more backend folders (e.g., <code>gbdt/</code>, <code>logreg/</code>), each containing:
+        <ul>
+          <li><code>edges.csv</code>: predicted undirected links, columns <code>id1</code>, <code>id2</code> (canonicalized with <code>id1 &lt; id2</code>).</li>
+          <li><code>clusters.csv</code>: connected components from <code>edges.csv</code>, columns:
+            <ul>
+              <li><code>cluster_id</code> (int)</li>
+              <li><code>size</code> (int)</li>
+              <li><code>members</code> (str): semicolon-separated ids, e.g., <code>1;2;3</code>.</li>
+            </ul>
+          </li>
+          <li>Optional diagnostics (e.g., <code>matches_*.csv</code>, <code>cluster_eval_val.json</code>, etc.).</li>
+        </ul>
+      </li>
+      <li>Shard folders may also contain heavy precomputed artifacts (e.g., <code>blocks/</code>, <code>candidates/</code>, <code>features/</code>) that can be reused via the Training tab's "Prime output shard" feature.</li>
+    </ul>
+
+    <h3>versions/</h3>
+    <ul>
+      <li>Created by the Inspector tab when you click "Save snapshot". A version directory contains:
+        <ul>
+          <li><code>meta.json</code>: provenance (source backend dir, people.csv path, timestamp, comment).</li>
+          <li><code>edges.csv</code>, <code>clusters.csv</code>: your edited working copy at save time.</li>
+        </ul>
+      </li>
+      <li>You can load any version as a baseline from the Inspector tab.</li>
+    </ul>
+
+  </div>
+
+  <footer>
+    <p style="margin: 0 0 16px 0;">
+      <strong>ICE-ID 2.0</strong> - Entity Resolution for Historical Census Data
+    </p>
+    <p>
+      <a href="index.html">Home</a> ·
+      <a href="https://github.com/IIIM-IS/ICE-ID-2.0">GitHub</a> ·
+      <a href="https://github.com/IIIM-IS/ICE-ID-2.0/issues">Issues</a>
+    </p>
+  </footer>
+</body>
+</html>
+
