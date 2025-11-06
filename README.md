@@ -530,3 +530,13 @@ summary = settings_manager.get_config_summary(loaded_config)
 - Supported operations: rename columns, drop columns, reset to original.
 - "Download Working Copy" exports the edited table; the original file on disk is not modified.
 - Missing data analysis: summary table plus optional visuals (requires `missingno`).
+
+### Data requirements
+- The repository has been split across Huggingface and GitHub. As such, the data required to run the code can be found at datasets/goldpotatoes/ice-id. You should then match the folder structure as indicated above.
+
+```python
+# Make sure git-lfs is installed (https://git-lfs.com)
+git lfs install
+
+git clone git@hf.co:datasets/goldpotatoes/ice-id
+```
