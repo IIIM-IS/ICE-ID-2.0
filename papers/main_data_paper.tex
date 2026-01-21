@@ -1,0 +1,447 @@
+\documentclass{article}
+
+\PassOptionsToPackage{numbers}{natbib}
+\usepackage[preprint]{neurips_2024}
+
+\usepackage[table]{xcolor}
+\usepackage{amsmath}
+\usepackage{subcaption}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{xcolor}
+
+
+\title{ICE-ID: A Novel Historical Census Dataset for Longitudinal Identity Resolution}
+
+
+\author{%
+   Gonçalo Hora de Carvalho\thanks{Corresponding author: \texttt{goncalo@iiim.is}} \\
+  IIIM, Iceland \\
+  \texttt{goncalo@iiim.is} \\
+  \And
+  Lazar S.~Popov \\
+  IIIM, Iceland \\
+  \And
+  Sander Kaatee \\
+  IIIM, Iceland \\
+  \AND
+  Kristinn R.~Thórisson \\
+  Full Research Professor, Department of Computer Science\\
+  Reykjavik University\\
+  \And
+  Tangrui Li \\
+  Temple University\\
+  \And
+  Pétur Húni Björnsson \\
+  Department of Nordic Studies and Linguistics\\
+  University of Copenhagen\\
+  \And
+  Jilles S.~Dibangoye \\
+  Associate Professor, Machine Learning Group, Department of Artificial Intelligence\\
+  Bernoulli Institute, University of Groningen\\
+}
+
+
+\begin{document}
+
+
+\maketitle
+
+
+\begin{abstract}
+We introduce \textbf{ICE-ID}, a benchmark dataset comprising 984,028 records spanning 220 years (1703--1920) of Icelandic national census waves with 226,864 unique person identifiers. ICE-ID combines hierarchical geography (farm$\to$parish$\to$district$\to$county), patronymic naming conventions, sparse kinship links (partner, father, mother), and multi-decadal temporal drift---challenges absent from standard product-matching or citation datasets. This paper provides an in-depth, artifact-backed analysis of ICE-ID's temporal coverage, missingness, identifier ambiguity, candidate-generation efficiency, and cluster distributions, comparing it against classic ER benchmarks (Abt--Buy, Amazon--Google, DBLP--ACM, DBLP--Scholar, Walmart--Amazon, iTunes--Amazon, Beer, Fodors--Zagats). We define a deployment-faithful temporal OOD protocol and release the dataset, scripts, splits, and analysis artifacts. For baseline model comparisons and end-to-end ER results, see our companion methods paper.
+\end{abstract}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% INTRODUCTION %%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+\section{Introduction}
+
+Linking historical census records is fundamental to research on social mobility, demographic change, migration, and epidemiology, yet it remains arduous because names mutate, fields are missing, and administrative borders shift over time \cite{ruggles2018historical}. Most census-specific benchmarks oversimplify these challenges: they cover only short time ranges (often a single decade), omit kinship structure, and treat geography as flat text rather than a hierarchy \cite{papadakis2023}.
+
+Carefully curated benchmarks can transform entire fields: \emph{ClimSim} unlocked hybrid physics--ML climate modelling \cite{ClimSim2024}; \emph{DecodingTrust} exposed safety gaps in frontier LLMs \cite{DecodingTrust2023}; the \emph{PRISM Alignment Dataset} broadened evaluation of alignment techniques across diverse regions \cite{PRISM2024}. Inspired by these successes, we release \textbf{ICE-ID}, the first large-scale open benchmark focused on \emph{long-term} person matching in a national population.
+
+This paper focuses exclusively on the dataset: its provenance, structure, statistical properties, and comparison with existing benchmarks. For model evaluations and method comparisons, we refer readers to our companion paper.
+
+\textbf{Contributions.} We provide:
+\begin{itemize}
+    \item a longitudinal census dataset with stable record IDs, hierarchical geography, and optional kinship links;
+    \item a temporal OOD evaluation protocol and task definitions suitable for both pairwise and clustering tracks;
+    \item a set of dataset-centric diagnostics (temporal coverage, missingness, ambiguity, blocking efficiency, cluster-size CCDF) generated from published artifacts;
+    \item a reproducible release with explicit provenance, licensing, and scripts that regenerate all tables and figures in this paper.
+\end{itemize}
+
+\subsection{Related Work}
+
+Identity resolution (also known as entity resolution or record linkage) aims to identify when two records refer to the same real-world entity. The foundational probabilistic model by Fellegi and Sunter formalizes matching decisions based on likelihood ratios of agreement patterns across fields \cite{fellegi1969theory}. Building on this, unsupervised methods such as ZeroER model match and non-match distributions via Gaussian Mixture Models and enforce transitivity constraints, achieving performance comparable to supervised learners without labeled data \cite{wu2020zeroer}.
+
+Supervised deep learning approaches have set state-of-the-art performance. Ditto serializes record pairs as text sequences and fine-tunes pre-trained Transformers, achieving state-of-the-art results on product matching benchmarks such as Abt–Buy \cite{li2020ditto}. Hierarchical Graph Attention Networks (HierGAT) incorporate both attribute-level and graph-level attention to enforce collective consistency, yielding top F$_1$ scores on standard ER datasets \cite{yao2022hiergat}. Hybrid rule-guided methods like GraphER leverage Graph Differential Dependencies to guide a graph neural network, offering interpretability alongside competitive performance in both graph-structured and relational entity resolution tasks \cite{hu2025grapher}.
+
+On the unsupervised front, Bayesian graphical models treat linkage as a latent clustering problem under exchangeable random partition priors with realistic distortion processes, delivering robust performance without labels \cite{marchant2023bayesian}. Zero-shot entity matching has been advanced by AnyMatch, which fine-tunes a small language model on synthetic matching examples; it reaches average F$_1$ within 4.4\% of a GPT-4-based matcher while reducing inference cost by orders of magnitude \cite{zhang2024anymatch}.
+
+Large Language Models (LLMs) have also been integrated into matching pipelines. BoostER uses GPT-4 as an on-demand oracle, selectively querying ambiguous pairs to refine match probabilities with minimal training effort \cite{li2024booster}. Explanation-driven approaches recast matching as a conditional generation task, distilling LLM reasoning into smaller models and improving out-of-domain generalization \cite{wadhwa2024learning}.
+
+The current frontier treats LLMs end-to-end for matching. MatchGPT employs GPT-4 with carefully designed prompts to achieve competitive F$_1$ on standard benchmarks, albeit at significant computational cost \cite{peeters2025entity}. These developments illustrate the evolution from statistical foundations through supervised and unsupervised methods toward LLM-centric solutions, highlighting trade-offs among accuracy, generalization, and efficiency.
+
+Historical census linkage in demographic research has progressed from simple phonetic and geographic blocking techniques to large-scale supervised matchers. Early efforts applied deterministic string–matching rules (e.g., Soundex) and geographic blocking to reduce candidate comparisons. Feigenbaum \emph{et al.} provide a comprehensive analysis of how training data quality affects census linkage, deploying supervised name and age similarity features calibrated via manual and crowd-sourced genealogies \cite{feigenbaum2025training}. Ruggles \emph{et al.} survey the progression of demographic ER methods in an Annual Review of Sociology, noting the incorporation of kinship networks and longitudinal residence trajectories \cite{ruggles2018historical}. Nevertheless, publicly available datasets that encode both household and inter-household kinship signals with multi-decadal links remain rare.
+
+Standard entity resolution benchmarks—such as product catalogs and citation graphs—typically span only short, modern timeframes and exhibit limited noise patterns. Papadakis \emph{et al.} re-evaluated thirteen common ER datasets, showing most are easy classification tasks solvable by simple threshold rules and lacking hierarchical geographic or kinship structure \cite{papadakis2023}. To expose real-world robustness deficits, Gardner \emph{et al.} proposed TableShift, a benchmark of fifteen tabular classification tasks with natural domain and temporal shifts \cite{gardner2023tableshift}, and Rubachev \emph{et al.} introduced TabReD, a suite of eight industry-grade datasets with explicit time-based train/test splits \cite{rubachev2024tabred}. However, neither includes genealogical hierarchies or century-spanning drift patterns, motivating ICE-ID as the first public dataset combining hierarchical geography, patronymic naming conventions, and multi-decadal variation.
+
+In parallel, deep learning architectures for tabular data have matured rapidly. Arık and Pfister’s TabNet employs sequential feature-wise attention to select and process the most relevant fields at each decision step \cite{arik2019tabnet}. Huang \emph{et al.} introduced TabTransformer, which contextualizes categorical features via multi-head self-attention \cite{huang2020tabtransformer}. More recently, Gorishniy \emph{et al.} proposed FT-Transformer, a simplified feature-tokenization plus Transformer mixer that rivals and often outperforms prior designs, offering faster convergence on generic tabular benchmarks \cite{gorishniy2021revisiting}. These models have not yet been evaluated on century-scale, genealogical matching tasks—a gap ICE-ID addresses.
+
+Robustness to temporal and domain shift has become crucial for deployment. TableShift documents in-distribution to out-of-distribution performance gaps for deep models on diverse tabular tasks \cite{gardner2023tableshift}, while TabReD shows that simpler or non-neural learners can generalize better under industrial data drift \cite{rubachev2024tabred}. ICE-ID follows this paradigm by withholding late-nineteenth and early-twentieth century censuses as OOD test sets, revealing weaknesses of modern tabular transformers when faced with extreme temporal drift.
+
+Finally, hybrid and symbolic methods offer complementary advantages. Non-axiomatic reasoning systems (NARS) can encode domain constraints and handle uncertainty explicitly, supplying similarity priors that augment ML embeddings. In our preliminary experiments, combining NARS-derived similarity scores with transformer-based models narrows performance gaps under heavy drift, reinforcing the promise of neuro-symbolic entity resolution pipelines.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% DATASET DESCRIPTION %%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+\section{Dataset Description}
+
+\subsection{Provenance and Collection}
+
+The Icelandic Historical Farm- and People Registry (IHFPR) integrates digitized Icelandic census records from 1703 through 1920 (with 1729 and 1870 partial) with a comprehensive 1847 farm and parish registry, enriched by auxiliary data from the National Library, National Land Survey, and National Registry. Personal and place names were normalized non-destructively by adding parallel ``raw'' and ``normalized'' columns, then exploded into relational tables for individuals, farms, residences, parishes, counties, and districts.
+
+\subsection{Schema and Tables}
+
+ICE-ID comprises four interlocking tables:
+
+\begin{enumerate}
+    \item \textbf{Geographic tables} (\texttt{counties.csv}, \texttt{districts.csv}, \texttt{parishes.csv}): Encode Iceland's evolving territorial hierarchy. Each record carries a unique identifier, human-readable name, validity interval (``begins''/``ends''), and geographic centroids (\texttt{lat}, \texttt{lon}).
+    
+    \item \textbf{People table} (\texttt{people.csv}): 984,028 rows---one per individual appearance in each census wave (1703--1920). Each row captures:
+    \begin{itemize}
+        \item Name components: \texttt{nafn\_norm}, \texttt{first\_name}, \texttt{patronym}, \texttt{surname}
+        \item Demographics: \texttt{birthyear}, \texttt{sex}, \texttt{status}, \texttt{marriagestatus}
+        \item Cluster labels: \texttt{person} (expert-curated identity)
+        \item Kinship links: \texttt{partner}, \texttt{father}, \texttt{mother} with provenance tags
+        \item Geography: \texttt{farm}, \texttt{parish}, \texttt{district}, \texttt{county}
+    \end{itemize}
+\end{enumerate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% TEMPORAL COVERAGE %%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+\section{Temporal Coverage and Label Density}
+\label{sec:temporal_coverage}
+
+Figure~\ref{fig:temporal_coverage} shows the distribution of records across census waves and the proportion with cluster labels. All numeric values in the caption and paragraph below are taken from the saved artifact \texttt{bench/paper\_artifacts/plot\_data/fig1\_temporal\_coverage.json} (and its CSV companion \texttt{bench/paper\_artifacts/plot\_data/fig1\_temporal\_coverage.csv}).
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\linewidth]{figures/fig1_temporal_coverage.pdf}
+  \caption{Temporal coverage and label density. ICE-ID spans 16 census waves; the 1703 census contains 50,959 records and the 1920 census contains 102,699. The average label rate (records with \texttt{person} assigned) is 50.17\%. Classic ER datasets are single-snapshot (``static'') and their label density is computed as the fraction of records appearing in at least one positive match pair.}
+  \label{fig:temporal_coverage}
+\end{figure}
+
+\textbf{Key observations:} ICE-ID spans 16 census waves from 1703 to 1920. Record counts range from 8,072 (1729, partial) to 102,699 (1920). The total labeled population comprises 226,864 unique person identifiers, with 106,168 persons (46.8\%) appearing in multiple waves. The average label rate is 50.17\%.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% MISSINGNESS ANALYSIS %%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+\section{Missingness Over Time by Feature Family}
+\label{sec:missingness}
+
+Understanding missingness patterns is critical for model development. Figure~\ref{fig:missingness} shows missing-rate trajectories over time for four feature families. All numeric values below are taken from \texttt{bench/paper\_artifacts/plot\_data/fig2\_missingness.json}.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\linewidth]{figures/fig2_missingness.pdf}
+  \caption{Missingness rates by feature family across census waves. Names are 25.39\% missing overall (dominated by surname), demographics are 1.38\% missing overall, geography is near-complete, and kinship links are 92.91\% missing overall.}
+  \label{fig:missingness}
+\end{figure}
+
+\textbf{Key observations:} Names are 25.39\% missing overall, driven primarily by surname. Demographics are 1.38\% missing overall (with most waves under 3\%). Kinship links are 92.91\% missing overall, explaining why methods that rely on household structure must be robust to sparse relational evidence.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% CLUSTER SIZE DISTRIBUTION %%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+\section{Entity Cluster Size Distribution}
+\label{sec:cluster_sizes}
+
+The cluster size distribution---how many census appearances per person---directly affects entity resolution difficulty. Figure~\ref{fig:cluster_sizes} shows the log--log CCDF. All numeric values below come from \texttt{bench/paper\_artifacts/plot\_data/fig3\_cluster\_sizes.json}.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figures/fig3_cluster_sizes.pdf}
+  \caption{Cluster size CCDF (log--log). Median cluster size is 1; 95th percentile is 6; maximum cluster size is 22.}
+  \label{fig:cluster_sizes}
+\end{figure}
+
+\textbf{Key observations:} 120,696 persons (53.2\%) appear in only one census; 45,436 (20.0\%) appear in two. The maximum cluster size is 22 appearances. Median cluster size is 1; 95th percentile is 6. The long tail of large clusters (individuals appearing in 6+ censuses) represents high-value longitudinal subjects but also presents challenges for clustering algorithms that must maintain transitivity over many pairwise predictions.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% IDENTIFIER AMBIGUITY %%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+\section{Identifier Ambiguity: Name Collision Analysis}
+\label{sec:ambiguity}
+
+Patronymic naming conventions in Iceland create significant name collisions. Figure~\ref{fig:ambiguity} shows the Zipf distribution of normalized names and compares token entropy to classic ER datasets. All numeric values below come from \texttt{bench/paper\_artifacts/plot\_data/fig4\_ambiguity.json}.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\linewidth]{figures/fig4_ambiguity.pdf}
+  \caption{Name ambiguity analysis. (Left) Zipf plot of top 100 normalized names (\texttt{nafn\_norm}). (Right) Token entropy comparison between ICE-ID and representative classic ER datasets.}
+  \label{fig:ambiguity}
+\end{figure}
+
+\textbf{Key observations:} The most common name (``Jón Jónsson'') appears 15,599 times. The top 10 names account for 6.2\% of all records. While the entropy (13.8 bits) is comparable to product datasets, the patronymic naming system creates systematic collisions: many individuals share identical names. This motivates the use of additional signals (birthyear, geography, kinship) for accurate disambiguation.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% BLOCKING ANALYSIS %%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+\section{Candidate Generation Efficiency}
+\label{sec:blocking}
+
+Scalable entity resolution requires effective blocking to reduce the $O(n^2)$ comparison space. Figure~\ref{fig:blocking} shows blocking recall vs. candidate budget for different strategies.
+\textbf{All numeric values in this section come from} \texttt{bench/paper\_artifacts/plot\_data/fig5\_blocking.json}, computed on an ICE-ID test subset.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figures/fig5_blocking.pdf}
+  \caption{Blocking efficiency curves (real). Token blocking on \texttt{nafn\_norm} achieves 0.90 recall at 46.5 candidates/record; at 199 candidates/record it reaches 0.998 recall. Hybrid token blocking (name+parish) achieves 0.94 recall at 66.6 candidates/record and 0.97 recall at 96.5 candidates/record.}
+  \label{fig:blocking}
+\end{figure}
+
+\textbf{Key observations:} Pure geographic blocking (parish only) is insufficient due to population mobility and administrative boundary changes, achieving only 0.59 recall even with 35 candidates/record. Name-based blocking on \texttt{nafn\_norm} is more effective, reaching 0.90 recall at 46 candidates/record. The hybrid strategy (name + parish) provides the best recall/efficiency tradeoff, achieving 0.97 recall at 96.5 candidates/record while reducing comparisons to $<$0.4\% of all pairs.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% DATASET COMPARISON %%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+\section{Comparison with Classical ER Benchmarks}
+\label{sec:comparison}
+
+Table~\ref{tab:dataset_synopsis} compares ICE-ID against standard entity resolution datasets.
+\textbf{All values in Tables~\ref{tab:dataset_synopsis}--\ref{tab:schema_matrix} are generated from} \texttt{bench/paper\_artifacts/table\_data/table1\_dataset\_synopsis.csv} and \texttt{bench/paper\_artifacts/table\_data/table2\_schema\_matrix.csv}.
+
+\begin{table}[ht]
+  \centering
+  \caption{Dataset synopsis: ICE-ID vs. classical ER benchmarks.}
+  \label{tab:dataset_synopsis}
+  \scriptsize
+  \begin{tabular}{lccccccc}
+    \toprule
+    \textbf{Dataset} & \textbf{Time Span} & \textbf{\#Waves} & \textbf{\#Records} & \textbf{\#Entities} & \textbf{\%Labeled} & \textbf{Geo} & \textbf{Kinship} \\
+    \midrule
+    ICE-ID & 1703--1920 & 16 & 984,028 & 226,864 & 50.2\% & Hierarchical & Yes \\
+    Abt-Buy & N/A & 1 & 11,486 & 11,486 & 100\% & Flat & No \\
+    Amazon-Google & N/A & 1 & 13,748 & 13,748 & 100\% & Flat & No \\
+    DBLP-ACM & N/A & 1 & 14,834 & 14,834 & 100\% & Flat & No \\
+    DBLP-Scholar & N/A & 1 & 34,446 & 34,446 & 100\% & Flat & No \\
+    Walmart-Amazon & N/A & 1 & 12,288 & 12,288 & 100\% & Flat & No \\
+    iTunes-Amazon & N/A & 1 & 642 & 642 & 100\% & Flat & No \\
+    Beer & N/A & 1 & 536 & 536 & 100\% & Flat & No \\
+    Fodors-Zagats & N/A & 1 & 1,134 & 1,134 & 100\% & Flat & No \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Table~\ref{tab:schema_matrix} provides a schema comparability matrix showing feature availability across datasets.
+
+\begin{table}[ht]
+  \centering
+  \caption{Schema comparability matrix. \checkmark = present, $\sim$ = partial, --- = absent.}
+  \label{tab:schema_matrix}
+  \scriptsize
+  \begin{tabular}{lccccccccc}
+    \toprule
+    \textbf{Feature Family} & \textbf{ICE-ID} & \textbf{Abt-Buy} & \textbf{Amz-Ggl} & \textbf{DBLP-ACM} & \textbf{Wlm-Amz} & \textbf{iTun-Amz} & \textbf{Beer} & \textbf{Fod-Zag} \\
+    \midrule
+    Name / Title & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
+    Age / Birthyear & \checkmark & --- & --- & --- & --- & --- & --- & --- \\
+    Sex / Gender & \checkmark & --- & --- & --- & --- & --- & --- & --- \\
+    Household / Family & \checkmark & --- & --- & --- & --- & --- & --- & --- \\
+    Parent links & \checkmark & --- & --- & --- & --- & --- & --- & --- \\
+    Spouse / Partner & \checkmark & --- & --- & --- & --- & --- & --- & --- \\
+    Address / Geo & \checkmark (4-level) & --- & --- & --- & --- & --- & --- & \checkmark \\
+    Temporal field & \checkmark & --- & --- & $\sim$ (year) & --- & $\sim$ (released) & --- & --- \\
+    Free-text notes & $\sim$ & \checkmark & \checkmark & --- & \checkmark & --- & --- & --- \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\textbf{Key observations:} ICE-ID is the only dataset combining temporal coverage, hierarchical geography, and kinship signals. Classical ER benchmarks lack demographic attributes entirely and provide only flat text fields for matching. This makes ICE-ID uniquely suited for evaluating methods that leverage structured signals.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% LONGITUDINAL DATASETS %%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+\section{Comparison with Longitudinal Datasets}
+\label{sec:longitudinal}
+
+While classical ER benchmarks are static snapshots, several other datasets capture identity over time. Table~\ref{tab:longitudinal} compares ICE-ID to longitudinal identity datasets.
+\textbf{All values in Table~\ref{tab:longitudinal} are backed by} \texttt{bench/paper\_artifacts/table\_data/table\_longitudinal\_comparison.json}.
+
+\begin{table}[ht]
+  \centering
+  \caption{Longitudinal dataset comparison. ``File'' = downloadable data; ``Doc'' = metadata only.}
+  \label{tab:longitudinal}
+  \scriptsize
+  \begin{tabular}{lcccccc}
+    \toprule
+    \textbf{Dataset} & \textbf{Time Span} & \textbf{Entity Type} & \textbf{$\sim$Entities} & \textbf{Temporal Signal} & \textbf{Data} & \textbf{Access} \\
+    \midrule
+    ICE-ID & 1703--1920 & Person & 227K & Census year & File & Open \\
+    IPUMS LRS & 1850--1940 & Person & 50M & Census year & Doc & Account \\
+    IPUMS MLP & 1870--2020 & Person & 100M & Census+survey & Doc & Account \\
+    IPUMS NAPP & 1801--1910 & Person & 100M & Census year & Doc & Account \\
+    ORCID & 2012--present & Researcher & 18M & Last modified & File (sample) & Open \\
+    SemParl & 1907--2021 & Parliamentarian & 7K & Speech date & File & Open \\
+    CKCC & 1600--1800 & Correspondent & 5K & Letter date & File & Open \\
+    correspSearch & 1500--2000 & Correspondent & 130K letters & Letter date & File & Open \\
+    Synthea & 1950--2020 & Patient & 1K (sample) & Encounter date & File & Open \\
+    FEBRL & N/A & Patient & 5--10K & None (static) & File & Open \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\textbf{Key observations:} IPUMS datasets provide the largest coverage of historical census data but require account access and restrict redistribution. Open alternatives (ORCID, SemParl, correspondence KGs) cover different entity types and time scales. ICE-ID is unique in combining (1) multi-century time span, (2) hierarchical geography, (3) kinship links, and (4) fully open access with downloadable data.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% MISSINGNESS VISUALIZATION %%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+\section{Missing Data Pattern Visualization}
+\label{sec:missingno}
+
+Figure~\ref{fig:missingno} provides a visual summary of missing data patterns in ICE-ID using a matrix plot. Each column represents a feature; white cells indicate missing values.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=0.9\linewidth]{figures/missingno_iceid.png}
+  \caption{Missing data matrix (sample of 1,000 records). Geographic fields are near-complete; kinship links (partner, father, mother) are mostly missing; names show moderate missingness.}
+  \label{fig:missingno}
+\end{figure}
+
+\textbf{Key observations:} The visualization confirms quantitative findings from Section~\ref{sec:missingness}: geographic hierarchy is reliably present, while kinship links are sparsely populated. This visual pattern is characteristic of historical census data where household relationships were inconsistently recorded.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% PROTOCOLS AND SPLITS %%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+\section{Evaluation Protocols and Splits}
+\label{sec:protocols}
+
+Table~\ref{tab:protocols} defines the canonical evaluation protocols for ICE-ID.
+\textbf{All values in Table~\ref{tab:protocols} are backed by} \texttt{bench/paper\_artifacts/table\_data/table3\_protocols\_splits.csv}.
+
+\begin{table}[ht]
+  \centering
+  \caption{Evaluation protocols and temporal splits.}
+  \label{tab:protocols}
+  \small
+  \begin{tabular}{lp{10cm}}
+    \toprule
+    \textbf{Component} & \textbf{Specification} \\
+    \midrule
+    \textbf{Temporal splits} & Train: pre-1870 (560,334 records, 153,311 unique persons); Val: 1871--1890 (147,450 records, 44,645 persons); Test: 1891--1920 (276,244 records, 62,109 persons) \\
+    \textbf{Positive pairs} & All pairs of records sharing the same \texttt{person} ID within the evaluation split \\
+    \textbf{Negative sampling} & 2 negatives per positive, sampled from same blocking partition \\
+    \textbf{Transitivity} & Ground-truth clusters defined by \texttt{person} field; methods should enforce transitivity in clustering outputs \\
+    \textbf{Evaluation modes} & Within-wave (same census) and cross-wave (adjacent censuses) \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\textbf{Cross-split overlap:} 6,136 persons (2.7\% of unique persons) appear in both train and test splits, enabling evaluation of temporal generalization on the same individuals over time.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% DATASET CARD %%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+\section{Dataset Card}
+\label{sec:dataset_card}
+
+Following the Datasheets for Datasets framework \cite{gebru2021datasheets}:
+
+\subsection{Motivation and Intended Use}
+\textbf{Purpose:} Provide a realistic, large-scale benchmark for longitudinal identity resolution.
+
+\textbf{Intended Uses:} (1) Entity resolution research; (2) Temporal distribution shift studies; (3) Genealogical/historical research.
+
+\textbf{Out-of-Scope Uses:} (1) Re-identification of living individuals (data ends 1920); (2) Commercial genealogy without attribution.
+
+\subsection{Composition}
+\textbf{Records:} 984,028 individual census appearances.
+\textbf{Labeled Entities:} 226,864 unique person clusters (106,168 with multiple records).
+\textbf{Fields:} 23 columns including names, demographics, kinship, geography.
+
+\subsection{Collection and Labeling}
+\textbf{Collection:} Digitized from Icelandic census manuscripts by National Archives.
+\textbf{Labels:} Expert-curated using genealogical records and parish registers.
+
+\subsection{Maintenance}
+\textbf{License:} CC-BY-4.0.
+\textbf{Access:} \url{https://huggingface.co/datasets/goldpotatoes/ice-id}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% LIMITATIONS %%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+\section{Limitations and Ethical Considerations}
+\label{sec:limitations}
+
+\textbf{Limitations:}
+\begin{itemize}
+    \item \textbf{Snapshot waves only:} Continuous life-course trajectories are inferred, not observed.
+    \item \textbf{Kinship sparsity:} Only 7\% of records have partner/parent links.
+    \item \textbf{Label noise:} Early censuses (1703, 1729) have higher transcription error rates.
+    \item \textbf{Coverage gaps:} 1729 and 1870 censuses are partial.
+\end{itemize}
+
+\textbf{Ethical considerations:} Census data ends in 1920, so no direct link to living individuals exists. The dataset enables historical/demographic research while minimizing re-identification risks.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% DISCUSSION AND FUTURE WORK %%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+\section{Discussion and Future Work}
+\label{sec:discussion_future}
+
+While this paper focuses on the dataset itself, we plan to conduct comprehensive model evaluations and method comparisons in future work. Our evaluation framework will benchmark ICE-ID across multiple model families to establish baselines and reveal the unique challenges posed by longitudinal, genealogical entity resolution.
+
+\subsection{Planned Model Evaluations}
+
+We will evaluate a diverse set of approaches spanning classical, neural, and symbolic methods. \textbf{Classical probabilistic methods} such as Fellegi--Sunter linkage will provide foundational baselines, while \textbf{unsupervised methods} like ZeroER will test the feasibility of label-free matching on ICE-ID's temporal structure. \textbf{Deep learning approaches} including Ditto (transformer-based pair serialization) and HierGAT (graph attention networks) will assess whether modern neural architectures can handle century-scale temporal drift. \textbf{Zero-shot methods} such as AnyMatch will evaluate transfer learning capabilities, and \textbf{LLM-based approaches} including MatchGPT will explore the potential of large language models for entity resolution.
+
+We will also develop and evaluate a \textbf{Non-Axiomatic Reasoning System (NARS)} pipeline for longitudinal identity resolution. NARS leverages Non-Axiomatic Logic to learn from sparse, atomic judgments without requiring large labeled sets or GPU resources. Our implementation will convert record pairs into Narsese statements encoding attribute agreements and disagreements (e.g., name matches, birthyear compatibility, geographic consistency), maintain a pattern pool with evidence-based truth values, and score queries by matching against learned patterns. This symbolic approach may offer complementary advantages: explicit uncertainty handling, domain constraint encoding, and graceful degradation under temporal drift.
+
+\subsection{Evaluation Metrics and Analysis}
+
+Our evaluation will combine \textbf{pairwise metrics} (precision, recall, F$_1$, ROC-AUC) with \textbf{clustering quality} (Adjusted Rand Index, B$^3$ F$_1$) and \textbf{ranking metrics} (P@K, R@K) to capture both classification accuracy and downstream entity clustering coherence. We anticipate that this multi-metric evaluation will reveal important disconnects: methods achieving high pairwise F$_1$ may struggle with clustering transitivity, highlighting the need for end-to-end evaluation beyond simple pair classification.
+
+We will conduct \textbf{end-to-end graph evaluation} by scoring candidate pairs generated via token blocking, then computing ranking and clustering metrics on the resulting thresholded similarity graph. This realistic evaluation protocol avoids overly optimistic pair sampling and better reflects deployment scenarios where candidate generation is a critical component.
+
+\subsection{Comparative Analysis}
+
+Our planned evaluation will compare methods across both ICE-ID and standard ER benchmarks (Abt--Buy, Amazon--Google, DBLP--ACM, DBLP--Scholar, Walmart--Amazon, iTunes--Amazon, Beer, Fodors--Zagats) to assess generalization and identify dataset-specific challenges. We will analyze performance under temporal out-of-distribution evaluation, comparing in-distribution performance (training and validation on pre-1870 and 1870--1890 data) against held-out test performance (1891--1920 censuses) to quantify robustness to temporal drift.
+
+For NARS specifically, we will conduct \textbf{ablation studies} to understand which judgment types (name, birthyear, sex, geography, temporal) contribute most to matching performance. We will also analyze \textbf{calibration sensitivity}, comparing different threshold selection strategies (fixed thresholds, median-midpoint, Platt scaling, isotonic regression) to understand how well-calibrated symbolic scores are for binary decision-making.
+
+\subsection{Expected Insights}
+
+We expect these evaluations to reveal several key insights: (1) the extent to which modern deep learning methods maintain performance under extreme temporal drift, (2) whether symbolic reasoning systems can provide competitive accuracy with superior robustness and interpretability, (3) the relationship between pairwise classification metrics and downstream clustering quality, and (4) the unique challenges posed by hierarchical geography, patronymic naming, and sparse kinship links in longitudinal entity resolution.
+
+These findings will inform the development of hybrid neuro-symbolic pipelines that combine the pattern recognition capabilities of neural models with the explicit reasoning and constraint-handling of symbolic systems, potentially offering the best of both worlds for non-stationary, resource-constrained entity resolution tasks.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% CONCLUSION %%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+\section{Conclusion}
+
+We introduce ICE-ID, a comprehensive benchmark dataset for longitudinal identity resolution comprising 984,028 census records spanning 220 years (1703--1920) with 226,864 unique person identifiers across 16 census waves. ICE-ID fills a critical gap in the entity resolution landscape by combining features absent from existing benchmarks: multi-century temporal coverage, hierarchical geography (farm$\to$parish$\to$district$\to$county), patronymic naming conventions, and sparse kinship links (partner, father, mother).
+
+Our analysis reveals the unique challenges posed by longitudinal, genealogical entity resolution. \textbf{Temporal coverage} shows 106,168 persons (46.8\%) appearing in multiple waves, with a median cluster size of 1 and a maximum of 22 appearances, creating a long tail of high-value longitudinal subjects. \textbf{Missingness patterns} demonstrate that while geographic fields are near-complete, kinship links are 92.91\% missing overall, and names show 25.39\% missingness (dominated by surname), requiring methods robust to sparse relational evidence. \textbf{Name ambiguity} analysis reveals systematic collisions from patronymic naming: the most common name (``Jón Jónsson'') appears 15,599 times, motivating the use of additional signals (birthyear, geography, kinship) for disambiguation. \textbf{Blocking efficiency} studies show that hybrid token blocking (name + parish) achieves 0.97 recall at 96.5 candidates/record, reducing comparisons to $<$0.4\% of all pairs while pure geographic blocking is insufficient due to population mobility.
+
+ICE-ID's comparison with classical ER benchmarks (Abt--Buy, Amazon--Google, DBLP--ACM, DBLP--Scholar, and others) highlights its uniqueness: it is the only dataset combining temporal coverage, hierarchical geography, and kinship signals, while classical benchmarks lack demographic attributes entirely. Comparison with longitudinal datasets (IPUMS, ORCID, SemParl, correspondence datasets) shows that ICE-ID uniquely combines multi-century time span, hierarchical geography, kinship links, and fully open access with downloadable data.
+
+We define a deployment-faithful temporal OOD evaluation protocol with strict temporal splits: pre-1870 for training (560,334 records, 153,311 persons), 1871--1890 for validation (147,450 records, 44,645 persons), and 1891--1920 for held-out testing (276,244 records, 62,109 persons). This protocol enables evaluation of temporal generalization, with 6,136 persons (2.7\%) appearing in both train and test splits, allowing assessment of model robustness on the same individuals over time.
+
+By releasing ICE-ID with complete provenance, reproducible preprocessing scripts, explicit evaluation protocols, and artifact-backed analysis (all tables and figures are generated from published JSON/CSV artifacts), we enable reproducible research on longitudinal identity resolution. The dataset's structure exposes fundamental challenges---name ambiguity, missingness, cluster size heterogeneity, temporal drift---that are absent from classical static benchmarks, making it an ideal testbed for evaluating robustness to non-stationary, real-world conditions.
+
+The planned model evaluations and method comparisons described in Section~\ref{sec:discussion_future} will establish comprehensive baselines across classical probabilistic, unsupervised, deep learning, zero-shot, LLM-based, and symbolic reasoning approaches. These evaluations will reveal the extent to which modern methods maintain performance under extreme temporal drift, whether symbolic reasoning systems can provide competitive accuracy with superior robustness, and the relationship between pairwise classification metrics and downstream clustering quality. We anticipate that ICE-ID will catalyze advances in hybrid neuro-symbolic pipelines that combine the pattern recognition capabilities of neural models with the explicit reasoning and constraint-handling of symbolic systems, ultimately advancing the state of the art in non-stationary, resource-constrained entity resolution.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% REFERENCES %%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+\bibliographystyle{plainnat}
+\bibliography{main}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%% APPENDIX %%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+\appendix
+
+\section{Dataset Access}
+Full dataset available at \url{https://huggingface.co/datasets/goldpotatoes/ice-id}.
+
+\section{Supplementary Statistics}
+Detailed per-census statistics and additional analysis artifacts are provided in the repository.
+
+\end{document}
