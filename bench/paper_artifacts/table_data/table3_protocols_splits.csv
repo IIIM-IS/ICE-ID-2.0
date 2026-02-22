@@ -1,0 +1,10 @@
+dataset,split_rule,train_records,train_persons,val_records,val_persons,test_records,test_persons,positive_def,negative_sampling,transitivity,eval_modes
+ICE-ID,Temporal (pre-1870 / 1871-1890 / 1891-1920),560334,153311,147450,44645,276244,62109,Same person ID,2:1 from blocking partition,Required (cluster labels),"Within-wave, Cross-wave"
+Abt-Buy,Stratified random,N/A,N/A,N/A,N/A,N/A,N/A,Match label,Provided,Not enforced,Cross-source
+Amazon-Google,Stratified random,N/A,N/A,N/A,N/A,N/A,N/A,Match label,Provided,Not enforced,Cross-source
+DBLP-ACM,Stratified random,N/A,N/A,N/A,N/A,N/A,N/A,Match label,Provided,Not enforced,Cross-source
+DBLP-Scholar,Stratified random,N/A,N/A,N/A,N/A,N/A,N/A,Match label,Provided,Not enforced,Cross-source
+Walmart-Amazon,Stratified random,N/A,N/A,N/A,N/A,N/A,N/A,Match label,Provided,Not enforced,Cross-source
+iTunes-Amazon,Stratified random,N/A,N/A,N/A,N/A,N/A,N/A,Match label,Provided,Not enforced,Cross-source
+Beer,Stratified random,N/A,N/A,N/A,N/A,N/A,N/A,Match label,Provided,Not enforced,Cross-source
+Fodors-Zagats,Stratified random,N/A,N/A,N/A,N/A,N/A,N/A,Match label,Provided,Not enforced,Cross-source

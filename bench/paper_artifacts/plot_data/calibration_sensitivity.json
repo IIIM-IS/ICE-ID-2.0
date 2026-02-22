@@ -1,0 +1,56 @@
+{
+  "source_csv": "/home/potatosalad/Documents/projects/iceidfinaldeliverable/ICE-ID-2.0/bench/benchmark_results/nars_calibration_sensitivity.csv",
+  "notes": "ICE-ID temporal split with hard negatives within blocking partitions; calibration uses val split only.",
+  "rows": [
+    {
+      "strategy": "fixed_0.5",
+      "auc": 0.9999335303054679,
+      "f1": 0.9945370902817712,
+      "precision": 0.9988449321397632,
+      "recall": 0.9902662467792729,
+      "threshold": 0.5,
+      "n": 10479,
+      "pos_rate": 0.3333333333333333
+    },
+    {
+      "strategy": "train_threshold",
+      "auc": 0.9999335303054679,
+      "f1": 0.9956983080011471,
+      "precision": 0.9974145360528583,
+      "recall": 0.9939879759519038,
+      "threshold": 0.1,
+      "n": 10479,
+      "pos_rate": 0.3333333333333333
+    },
+    {
+      "strategy": "tuned_on_val",
+      "auc": 0.9999335303054679,
+      "f1": 0.9958458673542473,
+      "precision": 0.9965596330275229,
+      "recall": 0.9951331233896364,
+      "threshold": 0.05,
+      "n": 10479,
+      "pos_rate": 0.3333333333333333
+    },
+    {
+      "strategy": "platt",
+      "auc": 0.9999335303054679,
+      "f1": 0.994826099453866,
+      "precision": 0.9988455988455989,
+      "recall": 0.9908388204981391,
+      "threshold": 0.5,
+      "n": 10479,
+      "pos_rate": 0.3333333333333333
+    },
+    {
+      "strategy": "isotonic",
+      "auc": 0.9999311944407403,
+      "f1": 0.9958458673542473,
+      "precision": 0.9965596330275229,
+      "recall": 0.9951331233896364,
+      "threshold": 0.5,
+      "n": 10479,
+      "pos_rate": 0.3333333333333333
+    }
+  ]
+}

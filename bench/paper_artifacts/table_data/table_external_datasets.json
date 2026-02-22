@@ -1,0 +1,32 @@
+[
+  {
+    "dataset": "IPUMS USA Linked Representative Samples (LRS)",
+    "status": "doc_sourced",
+    "type": "restricted",
+    "license": "Restricted (account required)",
+    "n_files": 0,
+    "total_rows": "~50M linked records",
+    "access": "Account required",
+    "note": "Doc-sourced only; requires IPUMS account."
+  },
+  {
+    "dataset": "IPUMS USA Multigenerational Longitudinal Panel (MLP)",
+    "status": "doc_sourced",
+    "type": "restricted",
+    "license": "Restricted (account required)",
+    "n_files": 0,
+    "total_rows": "~100M records",
+    "access": "Account required",
+    "note": "Doc-sourced only; requires IPUMS account."
+  },
+  {
+    "dataset": "IPUMS International NAPP",
+    "status": "doc_sourced",
+    "type": "restricted",
+    "license": "Restricted (account required)",
+    "n_files": 0,
+    "total_rows": "~100M records across countries",
+    "access": "Account required",
+    "note": "Doc-sourced only; requires IPUMS account."
+  }
+]

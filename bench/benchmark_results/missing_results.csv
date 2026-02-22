@@ -1,0 +1,3 @@
+model,dataset,f1,time,status
+ditto,iceid,1.0,56.890711307525635,completed
+zeroer,fodors_zagats,0.99,1.3955998420715332,completed

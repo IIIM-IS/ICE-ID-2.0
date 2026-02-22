@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-01-12T12:26:05.664708",
+  "datasets": {
+    "geco3": {
+      "name": "GeCo3",
+      "description": "Open synthetic data generator for record linkage",
+      "url": "https://github.com/T-Stam/GeCo/archive/refs/heads/main.zip",
+      "type": "zip",
+      "license": "MIT",
+      "access": "Open",
+      "doc_url": "https://github.com/T-Stam/GeCo",
+      "note": "Updated to T-Stam fork which is maintained.",
+      "fetched_at": "2026-01-12T12:26:05.504250",
+      "status": "failed"
+    }
+  },
+  "doc_sourced_only": {
+    "ipums_lrs": {
+      "name": "IPUMS USA Linked Representative Samples (LRS)",
+      "description": "Longitudinally linked U.S. census microdata",
+      "doc_url": "https://usa.ipums.org/usa/lrs.shtml",
+      "license": "Restricted (account required)",
+      "access": "Account required",
+      "time_span": "1850-1940",
+      "n_records": "~50M linked records",
+      "note": "Doc-sourced only; requires IPUMS account."
+    },
+    "ipums_mlp": {
+      "name": "IPUMS USA Multigenerational Longitudinal Panel (MLP)",
+      "description": "Multigenerational panel built from linked census and other sources",
+      "doc_url": "https://usa.ipums.org/usa/mlp.shtml",
+      "license": "Restricted (account required)",
+      "access": "Account required",
+      "time_span": "1870-2020",
+      "n_records": "~100M records",
+      "note": "Doc-sourced only; requires IPUMS account."
+    },
+    "ipums_napp": {
+      "name": "IPUMS International NAPP",
+      "description": "North Atlantic Population Project historical census microdata",
+      "doc_url": "https://international.ipums.org/international/napp.shtml",
+      "license": "Restricted (account required)",
+      "access": "Account required",
+      "time_span": "1801-1910",
+      "n_records": "~100M records across countries",
+      "note": "Doc-sourced only; requires IPUMS account."
+    }
+  }
+}

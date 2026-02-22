@@ -1,0 +1,110 @@
+[
+  {
+    "dataset": "ICE-ID",
+    "time_span": "1703-1920",
+    "n_waves": 16,
+    "n_records": 984028,
+    "n_entities": 226864,
+    "pct_labeled": 50.2,
+    "geo_granularity": "4-level hierarchy",
+    "kinship": "Yes",
+    "license": "CC-BY-4.0",
+    "access": "Open"
+  },
+  {
+    "dataset": "Abt-Buy",
+    "time_span": "N/A",
+    "n_waves": 1,
+    "n_records": 11486,
+    "n_entities": 11486,
+    "pct_labeled": 100.0,
+    "geo_granularity": "None",
+    "kinship": "No",
+    "license": "Research",
+    "access": "Open"
+  },
+  {
+    "dataset": "Amazon-Google",
+    "time_span": "N/A",
+    "n_waves": 1,
+    "n_records": 13748,
+    "n_entities": 13748,
+    "pct_labeled": 100.0,
+    "geo_granularity": "None",
+    "kinship": "No",
+    "license": "Research",
+    "access": "Open"
+  },
+  {
+    "dataset": "DBLP-ACM",
+    "time_span": "N/A",
+    "n_waves": 1,
+    "n_records": 14834,
+    "n_entities": 14834,
+    "pct_labeled": 100.0,
+    "geo_granularity": "None",
+    "kinship": "No",
+    "license": "Research",
+    "access": "Open"
+  },
+  {
+    "dataset": "DBLP-Scholar",
+    "time_span": "N/A",
+    "n_waves": 1,
+    "n_records": 34446,
+    "n_entities": 34446,
+    "pct_labeled": 100.0,
+    "geo_granularity": "None",
+    "kinship": "No",
+    "license": "Research",
+    "access": "Open"
+  },
+  {
+    "dataset": "Walmart-Amazon",
+    "time_span": "N/A",
+    "n_waves": 1,
+    "n_records": 12288,
+    "n_entities": 12288,
+    "pct_labeled": 100.0,
+    "geo_granularity": "None",
+    "kinship": "No",
+    "license": "Research",
+    "access": "Open"
+  },
+  {
+    "dataset": "iTunes-Amazon",
+    "time_span": "N/A",
+    "n_waves": 1,
+    "n_records": 642,
+    "n_entities": 642,
+    "pct_labeled": 100.0,
+    "geo_granularity": "None",
+    "kinship": "No",
+    "license": "Research",
+    "access": "Open"
+  },
+  {
+    "dataset": "Beer",
+    "time_span": "N/A",
+    "n_waves": 1,
+    "n_records": 536,
+    "n_entities": 536,
+    "pct_labeled": 100.0,
+    "geo_granularity": "None",
+    "kinship": "No",
+    "license": "Research",
+    "access": "Open"
+  },
+  {
+    "dataset": "Fodors-Zagats",
+    "time_span": "N/A",
+    "n_waves": 1,
+    "n_records": 1134,
+    "n_entities": 1134,
+    "pct_labeled": 100.0,
+    "geo_granularity": "Flat (city)",
+    "kinship": "No",
+    "license": "Research",
+    "access": "Open"
+  }
+]

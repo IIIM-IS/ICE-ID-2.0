@@ -1,0 +1,11 @@
+dataset,time_span,temporal_signal,n_entities,entity_type,temporal_coverage,file_derived,access
+ICE-ID,1703-1920,Census year,227K persons,Person,16 waves,Yes,Open
+IPUMS LRS,1850-1940,Census year,~50M,Person,10 waves,No (doc),Account
+IPUMS MLP,1870-2020,Census + survey,~100M,Person,Continuous,No (doc),Account
+IPUMS NAPP,1801-1910,Census year,~100M,Person,Multi-country,No (doc),Account
+ORCID,2012-present,Last modified,~18M,Researcher,Continuous,Yes (sample),Open
+SemParl,1907-2021,Speech date,~7K persons,Parliamentarian,Daily,Yes,Open
+CKCC,1600-1800,Letter date,~5K persons,Correspondent,Sparse,Yes,Open
+correspSearch,1500-2000,Letter date,~130K letters,Correspondent,Sparse,Yes,Open
+Synthea,1950-2020,Encounter date,~1K (sample),Patient,Daily,Yes,Open
+FEBRL,N/A,None,5K-10K,Patient,Static,Yes,Open

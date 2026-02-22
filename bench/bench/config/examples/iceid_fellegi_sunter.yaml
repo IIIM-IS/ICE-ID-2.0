@@ -1,0 +1,42 @@
+name: iceid_fellegi_sunter
+
+seed: 42
+
+dataset:
+  name: iceid
+  data_dir: ../raw_data
+  train_before_year: 1870
+  val_year_range: [1870, 1900]
+  test_year_range: [1901, 1920]
+
+blocking:
+  name: phonetic_blocking
+  params:
+    fields: [first_name, patronym, surname]
+    method: soundex
+
+pairs:
+  mode: from_clusters
+  train_ratio: 0.7
+  cap: 50000
+
+model:
+  name: fellegi_sunter
+  params:
+    comparison_fields: [nafn_norm, first_name, patronym, surname, birthyear, sex]
+    smoothing: 0.1
+
+calibration:
+  name: platt
+  params: {}
+
+clustering:
+  name: hac
+  params:
+    threshold: 0.5
+    linkage: average
+
+metrics:
+  pairwise: [precision, recall, f1, auc]
+  clustering: [ari, b3_f1]
+

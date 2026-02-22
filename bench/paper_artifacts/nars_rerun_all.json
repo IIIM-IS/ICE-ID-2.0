@@ -1,0 +1,110 @@
+[
+  {
+    "dataset": "iceid",
+    "protocol": "temporal_split_hard_neg",
+    "auc": 0.482421875,
+    "f1": 0.0,
+    "precision": 0.0,
+    "recall": 0.0,
+    "threshold": 0.5,
+    "n": 48,
+    "pos_rate": 0.3333333333333333,
+    "random_auc": 0.591796875
+  },
+  {
+    "dataset": "abt_buy",
+    "protocol": "deepmatcher_split",
+    "auc": 0.5236474119628084,
+    "f1": 0.0,
+    "precision": 0.0,
+    "recall": 0.0,
+    "threshold": 0.5,
+    "n": 2000,
+    "pos_rate": 0.058,
+    "random_auc": 0.4898189838201918
+  },
+  {
+    "dataset": "amazon_google",
+    "protocol": "deepmatcher_split",
+    "auc": 0.5179893726081221,
+    "f1": 0.0,
+    "precision": 0.0,
+    "recall": 0.0,
+    "threshold": 0.5,
+    "n": 2000,
+    "pos_rate": 0.0655,
+    "random_auc": 0.5343715666213308
+  },
+  {
+    "dataset": "dblp_acm",
+    "protocol": "deepmatcher_split",
+    "auc": 0.49660106348004435,
+    "f1": 0.0,
+    "precision": 0.0,
+    "recall": 0.0,
+    "threshold": 0.5,
+    "n": 2000,
+    "pos_rate": 0.1365,
+    "random_auc": 0.500777354280539
+  },
+  {
+    "dataset": "dblp_scholar",
+    "protocol": "deepmatcher_split",
+    "auc": 0.4768846679797764,
+    "f1": 0.0,
+    "precision": 0.0,
+    "recall": 0.0,
+    "threshold": 0.5,
+    "n": 2000,
+    "pos_rate": 0.3245,
+    "random_auc": 0.4869622342178766
+  },
+  {
+    "dataset": "itunes_amazon",
+    "protocol": "deepmatcher_split",
+    "auc": 0.5425469483568075,
+    "f1": 0.0,
+    "precision": 0.0,
+    "recall": 0.0,
+    "threshold": 0.5,
+    "n": 2000,
+    "pos_rate": 0.006,
+    "random_auc": 0.43959590878604965
+  },
+  {
+    "dataset": "walmart_amazon",
+    "protocol": "deepmatcher_split",
+    "auc": 0.5109133975413045,
+    "f1": 0.0,
+    "precision": 0.0,
+    "recall": 0.0,
+    "threshold": 0.5,
+    "n": 2000,
+    "pos_rate": 0.054,
+    "random_auc": 0.5292312661498708
+  },
+  {
+    "dataset": "beer",
+    "protocol": "deepmatcher_split",
+    "auc": 0.5056475903614458,
+    "f1": 0.0,
+    "precision": 0.0,
+    "recall": 0.0,
+    "threshold": 0.5,
+    "n": 2000,
+    "pos_rate": 0.004,
+    "random_auc": 0.3020205823293173
+  },
+  {
+    "dataset": "fodors_zagats",
+    "protocol": "deepmatcher_split",
+    "auc": 0.44263527054108215,
+    "f1": 0.0,
+    "precision": 0.0,
+    "recall": 0.0,
+    "threshold": 0.5,
+    "n": 2000,
+    "pos_rate": 0.002,
+    "random_auc": 0.716933867735471
+  }
+]

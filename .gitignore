@@ -160,6 +160,26 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
+# External datasets and large data (too large to track)
+data/
+raw_data/
+runs/
+bench/external/
+bench/deepmatcher_data/
+bench/logs/
+bench/__pycache__/
+
+# Log files
+logs/
+*.log
+
+# LaTeX build artifacts
+papers/*.aux
+papers/*.bbl
+papers/*.blg
+papers/*.out
+papers/notes.txt
+
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore

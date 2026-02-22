@@ -1,0 +1,137 @@
+{
+  "subset_records": 7466,
+  "subset_persons": 2000,
+  "ground_truth_pairs": 16614,
+  "curves": {
+    "token_name": {
+      "description": "Token blocking on nafn_norm",
+      "fields": [
+        "nafn_norm"
+      ],
+      "points": [
+        {
+          "max_block_size": 50,
+          "candidates_per_record": 7.1447,
+          "blocking_recall": 0.578187,
+          "n_candidates": 53342,
+          "n_ground_truth_pairs": 16614
+        },
+        {
+          "max_block_size": 100,
+          "candidates_per_record": 17.1192,
+          "blocking_recall": 0.760503,
+          "n_candidates": 127812,
+          "n_ground_truth_pairs": 16614
+        },
+        {
+          "max_block_size": 200,
+          "candidates_per_record": 46.5372,
+          "blocking_recall": 0.899482,
+          "n_candidates": 347447,
+          "n_ground_truth_pairs": 16614
+        },
+        {
+          "max_block_size": 500,
+          "candidates_per_record": 63.3598,
+          "blocking_recall": 0.932828,
+          "n_candidates": 473044,
+          "n_ground_truth_pairs": 16614
+        },
+        {
+          "max_block_size": 1000,
+          "candidates_per_record": 199.2002,
+          "blocking_recall": 0.998074,
+          "n_candidates": 1487229,
+          "n_ground_truth_pairs": 16614
+        }
+      ]
+    },
+    "token_name_geo": {
+      "description": "Token blocking on nafn_norm, parish",
+      "fields": [
+        "nafn_norm",
+        "parish"
+      ],
+      "points": [
+        {
+          "max_block_size": 50,
+          "candidates_per_record": 12.4687,
+          "blocking_recall": 0.688516,
+          "n_candidates": 93091,
+          "n_ground_truth_pairs": 16614
+        },
+        {
+          "max_block_size": 100,
+          "candidates_per_record": 29.2448,
+          "blocking_recall": 0.852895,
+          "n_candidates": 218342,
+          "n_ground_truth_pairs": 16614
+        },
+        {
+          "max_block_size": 200,
+          "candidates_per_record": 66.5832,
+          "blocking_recall": 0.94294,
+          "n_candidates": 497110,
+          "n_ground_truth_pairs": 16614
+        },
+        {
+          "max_block_size": 500,
+          "candidates_per_record": 96.5202,
+          "blocking_recall": 0.97147,
+          "n_candidates": 720620,
+          "n_ground_truth_pairs": 16614
+        },
+        {
+          "max_block_size": 1000,
+          "candidates_per_record": 230.9525,
+          "blocking_recall": 0.998134,
+          "n_candidates": 1724291,
+          "n_ground_truth_pairs": 16614
+        }
+      ]
+    },
+    "token_geo_only": {
+      "description": "Token blocking on parish",
+      "fields": [
+        "parish"
+      ],
+      "points": [
+        {
+          "max_block_size": 50,
+          "candidates_per_record": 5.7234,
+          "blocking_recall": 0.263031,
+          "n_candidates": 42731,
+          "n_ground_truth_pairs": 16614
+        },
+        {
+          "max_block_size": 100,
+          "candidates_per_record": 13.1138,
+          "blocking_recall": 0.416035,
+          "n_candidates": 97908,
+          "n_ground_truth_pairs": 16614
+        },
+        {
+          "max_block_size": 200,
+          "candidates_per_record": 21.7262,
+          "blocking_recall": 0.511496,
+          "n_candidates": 162208,
+          "n_ground_truth_pairs": 16614
+        },
+        {
+          "max_block_size": 500,
+          "candidates_per_record": 35.5284,
+          "blocking_recall": 0.592392,
+          "n_candidates": 265255,
+          "n_ground_truth_pairs": 16614
+        },
+        {
+          "max_block_size": 1000,
+          "candidates_per_record": 35.5284,
+          "blocking_recall": 0.592392,
+          "n_candidates": 265255,
+          "n_ground_truth_pairs": 16614
+        }
+      ]
+    }
+  }
+}

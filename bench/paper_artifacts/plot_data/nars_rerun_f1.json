@@ -1,0 +1,65 @@
+[
+  {
+    "dataset": "FODORS-ZAGATS",
+    "f1": 0.1039,
+    "auc": 0.9855,
+    "precision": 0.0548,
+    "recall": 1.0
+  },
+  {
+    "dataset": "ABT-BUY",
+    "f1": 0.6482,
+    "auc": 0.9447,
+    "precision": 0.5223,
+    "recall": 0.8543
+  },
+  {
+    "dataset": "BEER",
+    "f1": 0.75,
+    "auc": 0.9728,
+    "precision": 0.8571,
+    "recall": 0.6667
+  },
+  {
+    "dataset": "ITUNES-AMAZON",
+    "f1": 0.7568,
+    "auc": 0.999,
+    "precision": 0.6667,
+    "recall": 0.875
+  },
+  {
+    "dataset": "AMAZON-GOOGLE",
+    "f1": 0.7592,
+    "auc": 0.9671,
+    "precision": 0.7204,
+    "recall": 0.8024
+  },
+  {
+    "dataset": "WALMART-AMAZON",
+    "f1": 0.8503,
+    "auc": 0.9956,
+    "precision": 0.817,
+    "recall": 0.8865
+  },
+  {
+    "dataset": "ICE-ID",
+    "f1": 0.9938,
+    "auc": 0.9984,
+    "precision": 0.9954,
+    "recall": 0.9923
+  },
+  {
+    "dataset": "DBLP-SCHOLAR",
+    "f1": 0.995,
+    "auc": 0.9999,
+    "precision": 0.9975,
+    "recall": 0.9925
+  },
+  {
+    "dataset": "DBLP-ACM",
+    "f1": 0.997,
+    "auc": 1.0,
+    "precision": 1.0,
+    "recall": 0.994
+  }
+]

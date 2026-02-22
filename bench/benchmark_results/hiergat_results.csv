@@ -1,0 +1,10 @@
+model,dataset,status,f1,time
+hiergat,iceid,completed,1.0,14.87328553199768
+hiergat,abt_buy,completed,0.3333,17.267038583755493
+hiergat,amazon_google,completed,0.203,23.366477727890015
+hiergat,dblp_acm,completed,0.3264,14.937002420425415
+hiergat,dblp_scholar,completed,0.3471,14.164528131484985
+hiergat,walmart_amazon,completed,0.2353,14.873587131500244
+hiergat,beer,completed,0.2667,11.082505464553833
+hiergat,fodors_zagats,completed,0.3301,28.455926179885864
+hiergat,itunes_amazon,completed,0.3971,15.473472118377686

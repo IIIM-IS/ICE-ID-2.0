@@ -1,0 +1,2 @@
+dataset,protocol,subset_records,subset_persons,pairs_scored,pos_rate,threshold,auc,precision,recall,f1,p_at_k,r_at_k,ari_cc,b3_precision,b3_recall,b3_f1,time_block_s,time_fit_s,time_score_s,rss_mb_after_block,rss_mb_after_fit,rss_mb_after_score
+iceid,candidate_graph_token_blocking,11183,3000,2000,0.009,0.5,0.45916021975557797,0.0,0.0,0.0,0.1111111111111111,0.1111111111111111,0.0033191137956263875,0.8284486376531603,0.37872307727444765,0.5198143951453401,1.8125629425048828,60.387208461761475,30.851738452911377,915.41015625,981.703125,981.703125

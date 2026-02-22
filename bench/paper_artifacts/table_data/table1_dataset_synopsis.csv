@@ -1,0 +1,10 @@
+dataset,time_span,n_waves,n_records,n_entities,pct_labeled,geo_granularity,kinship,license,access
+ICE-ID,1703-1920,16,984028,226864,50.2,4-level hierarchy,Yes,CC-BY-4.0,Open
+Abt-Buy,N/A,1,11486,11486,100.0,None,No,Research,Open
+Amazon-Google,N/A,1,13748,13748,100.0,None,No,Research,Open
+DBLP-ACM,N/A,1,14834,14834,100.0,None,No,Research,Open
+DBLP-Scholar,N/A,1,34446,34446,100.0,None,No,Research,Open
+Walmart-Amazon,N/A,1,12288,12288,100.0,None,No,Research,Open
+iTunes-Amazon,N/A,1,642,642,100.0,None,No,Research,Open
+Beer,N/A,1,536,536,100.0,None,No,Research,Open
+Fodors-Zagats,N/A,1,1134,1134,100.0,Flat (city),No,Research,Open

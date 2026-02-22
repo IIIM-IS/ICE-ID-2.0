@@ -1,0 +1,409 @@
+{
+  "top_100_names": [
+    {
+      "name": "j\u00f3n j\u00f3nsson",
+      "count": 15599
+    },
+    {
+      "name": "gu\u00f0r\u00fan j\u00f3nsd\u00f3ttir",
+      "count": 11754
+    },
+    {
+      "name": "sigr\u00ed\u00f0ur j\u00f3nsd\u00f3ttir",
+      "count": 6429
+    },
+    {
+      "name": "gu\u00f0mundur j\u00f3nsson",
+      "count": 4524
+    },
+    {
+      "name": "gu\u00f0mundur gu\u00f0mundsson",
+      "count": 4130
+    },
+    {
+      "name": "margr\u00e9t j\u00f3nsd\u00f3ttir",
+      "count": 3961
+    },
+    {
+      "name": "gu\u00f0r\u00fan gu\u00f0mundsd\u00f3ttir",
+      "count": 3874
+    },
+    {
+      "name": "ingibj\u00f6rg j\u00f3nsd\u00f3ttir",
+      "count": 3699
+    },
+    {
+      "name": "krist\u00edn j\u00f3nsd\u00f3ttir",
+      "count": 3453
+    },
+    {
+      "name": "j\u00f3n gu\u00f0mundsson",
+      "count": 3433
+    },
+    {
+      "name": "sigur\u00f0ur j\u00f3nsson",
+      "count": 3413
+    },
+    {
+      "name": "sigur\u00f0ur sigur\u00f0arson",
+      "count": 2814
+    },
+    {
+      "name": "helga j\u00f3nsd\u00f3ttir",
+      "count": 2801
+    },
+    {
+      "name": "j\u00f3n sigur\u00f0arson",
+      "count": 2695
+    },
+    {
+      "name": "gu\u00f0r\u00fan sigur\u00f0ard\u00f3ttir",
+      "count": 2581
+    },
+    {
+      "name": "bjarni j\u00f3nsson",
+      "count": 2272
+    },
+    {
+      "name": "magn\u00fas j\u00f3nsson",
+      "count": 2240
+    },
+    {
+      "name": "\u00f3lafur j\u00f3nsson",
+      "count": 2194
+    },
+    {
+      "name": "gu\u00f0r\u00fan bjarnad\u00f3ttir",
+      "count": 2153
+    },
+    {
+      "name": "gu\u00f0r\u00fan \u00f3lafsd\u00f3ttir",
+      "count": 2145
+    },
+    {
+      "name": "nan",
+      "count": 2118
+    },
+    {
+      "name": "einar j\u00f3nsson",
+      "count": 2083
+    },
+    {
+      "name": "gu\u00f0r\u00fan magn\u00fasd\u00f3ttir",
+      "count": 2027
+    },
+    {
+      "name": "j\u00f3n bjarnason",
+      "count": 1986
+    },
+    {
+      "name": "j\u00f3n einarsson",
+      "count": 1985
+    },
+    {
+      "name": "sigr\u00ed\u00f0ur gu\u00f0mundsd\u00f3ttir",
+      "count": 1979
+    },
+    {
+      "name": "j\u00f3n magn\u00fasson",
+      "count": 1864
+    },
+    {
+      "name": "gu\u00f0r\u00fan einarsd\u00f3ttir",
+      "count": 1840
+    },
+    {
+      "name": "j\u00f3n \u00f3lafsson",
+      "count": 1818
+    },
+    {
+      "name": "sigr\u00ed\u00f0ur sigur\u00f0ard\u00f3ttir",
+      "count": 1811
+    },
+    {
+      "name": "\u00f3lafur \u00f3lafsson",
+      "count": 1767
+    },
+    {
+      "name": "magn\u00fas magn\u00fasson",
+      "count": 1729
+    },
+    {
+      "name": "gu\u00f0bj\u00f6rg j\u00f3nsd\u00f3ttir",
+      "count": 1721
+    },
+    {
+      "name": "j\u00f3hanna j\u00f3nsd\u00f3ttir",
+      "count": 1714
+    },
+    {
+      "name": "\u00e1rni j\u00f3nsson",
+      "count": 1643
+    },
+    {
+      "name": "gu\u00f0n\u00fd j\u00f3nsd\u00f3ttir",
+      "count": 1619
+    },
+    {
+      "name": "gu\u00f0r\u00ed\u00f0ur j\u00f3nsd\u00f3ttir",
+      "count": 1575
+    },
+    {
+      "name": "bjarni bjarnason",
+      "count": 1498
+    },
+    {
+      "name": "einar einarsson",
+      "count": 1488
+    },
+    {
+      "name": "\u00feorsteinn j\u00f3nsson",
+      "count": 1481
+    },
+    {
+      "name": "j\u00f3n \u00e1rnason",
+      "count": 1471
+    },
+    {
+      "name": "steinunn j\u00f3nsd\u00f3ttir",
+      "count": 1416
+    },
+    {
+      "name": "g\u00edsli j\u00f3nsson",
+      "count": 1411
+    },
+    {
+      "name": "anna j\u00f3nsd\u00f3ttir",
+      "count": 1397
+    },
+    {
+      "name": "bj\u00f6rn j\u00f3nsson",
+      "count": 1391
+    },
+    {
+      "name": "gu\u00f0r\u00fan g\u00edslad\u00f3ttir",
+      "count": 1383
+    },
+    {
+      "name": "krist\u00edn gu\u00f0mundsd\u00f3ttir",
+      "count": 1352
+    },
+    {
+      "name": "ingibj\u00f6rg gu\u00f0mundsd\u00f3ttir",
+      "count": 1331
+    },
+    {
+      "name": "\u00feur\u00ed\u00f0ur j\u00f3nsd\u00f3ttir",
+      "count": 1323
+    },
+    {
+      "name": "valger\u00f0ur j\u00f3nsd\u00f3ttir",
+      "count": 1317
+    },
+    {
+      "name": "gu\u00f0r\u00fan \u00e1rnad\u00f3ttir",
+      "count": 1293
+    },
+    {
+      "name": "margr\u00e9t gu\u00f0mundsd\u00f3ttir",
+      "count": 1285
+    },
+    {
+      "name": "sigr\u00ed\u00f0ur bjarnad\u00f3ttir",
+      "count": 1283
+    },
+    {
+      "name": "gu\u00f0r\u00fan \u00feorsteinsd\u00f3ttir",
+      "count": 1280
+    },
+    {
+      "name": "halld\u00f3ra j\u00f3nsd\u00f3ttir",
+      "count": 1279
+    },
+    {
+      "name": "j\u00f3n \u00feorsteinsson",
+      "count": 1267
+    },
+    {
+      "name": "\u00fe\u00f3runn j\u00f3nsd\u00f3ttir",
+      "count": 1244
+    },
+    {
+      "name": "gu\u00f0mundur sigur\u00f0arson",
+      "count": 1223
+    },
+    {
+      "name": "\u00f3l\u00f6f j\u00f3nsd\u00f3ttir",
+      "count": 1221
+    },
+    {
+      "name": "j\u00f3n \u00fe\u00f3r\u00f0arson",
+      "count": 1202
+    },
+    {
+      "name": "j\u00f3nas j\u00f3nsson",
+      "count": 1147
+    },
+    {
+      "name": "kristj\u00e1n j\u00f3nsson",
+      "count": 1147
+    },
+    {
+      "name": "gu\u00f0laug j\u00f3nsd\u00f3ttir",
+      "count": 1127
+    },
+    {
+      "name": "g\u00edsli g\u00edslason",
+      "count": 1124
+    },
+    {
+      "name": "sigr\u00ed\u00f0ur magn\u00fasd\u00f3ttir",
+      "count": 1123
+    },
+    {
+      "name": "j\u00f3n g\u00edslason",
+      "count": 1101
+    },
+    {
+      "name": "\u00feorbj\u00f6rg j\u00f3nsd\u00f3ttir",
+      "count": 1099
+    },
+    {
+      "name": "sigr\u00ed\u00f0ur \u00f3lafsd\u00f3ttir",
+      "count": 1096
+    },
+    {
+      "name": "el\u00edn j\u00f3nsd\u00f3ttir",
+      "count": 1091
+    },
+    {
+      "name": "j\u00f3n bj\u00f6rnsson",
+      "count": 1082
+    },
+    {
+      "name": "sigur\u00f0ur gu\u00f0mundsson",
+      "count": 1071
+    },
+    {
+      "name": "gu\u00f0mundur magn\u00fasson",
+      "count": 1065
+    },
+    {
+      "name": "\u00fe\u00f3r\u00f0ur j\u00f3nsson",
+      "count": 1064
+    },
+    {
+      "name": "gu\u00f0r\u00fan bj\u00f6rnsd\u00f3ttir",
+      "count": 1056
+    },
+    {
+      "name": "\u00e1rni \u00e1rnason",
+      "count": 1045
+    },
+    {
+      "name": "gu\u00f0r\u00fan \u00fe\u00f3r\u00f0ard\u00f3ttir",
+      "count": 1043
+    },
+    {
+      "name": "halld\u00f3r j\u00f3nsson",
+      "count": 1038
+    },
+    {
+      "name": "\u00feorsteinn \u00feorsteinsson",
+      "count": 1038
+    },
+    {
+      "name": "\u00fe\u00f3ra j\u00f3nsd\u00f3ttir",
+      "count": 1034
+    },
+    {
+      "name": "j\u00f3hannes j\u00f3nsson",
+      "count": 1027
+    },
+    {
+      "name": "sveinn j\u00f3nsson",
+      "count": 1008
+    },
+    {
+      "name": "stef\u00e1n j\u00f3nsson",
+      "count": 988
+    },
+    {
+      "name": "bj\u00f6rn bj\u00f6rnsson",
+      "count": 965
+    },
+    {
+      "name": "margr\u00e9t sigur\u00f0ard\u00f3ttir",
+      "count": 962
+    },
+    {
+      "name": "sigr\u00ed\u00f0ur einarsd\u00f3ttir",
+      "count": 961
+    },
+    {
+      "name": "ingibj\u00f6rg sigur\u00f0ard\u00f3ttir",
+      "count": 957
+    },
+    {
+      "name": "ragnhildur j\u00f3nsd\u00f3ttir",
+      "count": 944
+    },
+    {
+      "name": "p\u00e1ll j\u00f3nsson",
+      "count": 937
+    },
+    {
+      "name": "helga gu\u00f0mundsd\u00f3ttir",
+      "count": 927
+    },
+    {
+      "name": "margr\u00e9t magn\u00fasd\u00f3ttir",
+      "count": 910
+    },
+    {
+      "name": "vilborg j\u00f3nsd\u00f3ttir",
+      "count": 899
+    },
+    {
+      "name": "gu\u00f0r\u00fan halld\u00f3rsd\u00f3ttir",
+      "count": 897
+    },
+    {
+      "name": "gu\u00f0mundur einarsson",
+      "count": 891
+    },
+    {
+      "name": "gu\u00f0j\u00f3n j\u00f3nsson",
+      "count": 886
+    },
+    {
+      "name": "krist\u00edn sigur\u00f0ard\u00f3ttir",
+      "count": 879
+    },
+    {
+      "name": "gu\u00f0mundur \u00f3lafsson",
+      "count": 871
+    },
+    {
+      "name": "\u00f3lafur gu\u00f0mundsson",
+      "count": 867
+    },
+    {
+      "name": "gu\u00f0bj\u00f6rg gu\u00f0mundsd\u00f3ttir",
+      "count": 865
+    },
+    {
+      "name": "sigr\u00ed\u00f0ur \u00e1rnad\u00f3ttir",
+      "count": 861
+    },
+    {
+      "name": "magn\u00fas gu\u00f0mundsson",
+      "count": 856
+    }
+  ],
+  "total_unique_names": 140939,
+  "total_records": 984028,
+  "entropy_bits": 13.8,
+  "effective_names": 14235.0,
+  "top_10_share_pct": 6.18
+}

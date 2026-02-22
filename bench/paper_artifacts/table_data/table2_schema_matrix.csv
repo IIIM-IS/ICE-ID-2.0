@@ -1,0 +1,10 @@
+feature_family,ICE-ID,Abt-Buy,Amz-Ggl,DBLP-ACM,Wlm-Amz,iTun-Amz,Beer,Fod-Zag
+Name / Title,Y,Y,Y,Y,Y,Y,Y,Y
+Age / Birthyear,Y,-,-,-,-,-,-,-
+Sex / Gender,Y,-,-,-,-,-,-,-
+Household / Family,Y,-,-,-,-,-,-,-
+Parent links,Y,-,-,-,-,-,-,-
+Spouse / Partner,Y,-,-,-,-,-,-,-
+Address / Geo,Y (4-level),-,-,-,-,-,-,Y
+Temporal field,Y,-,-,~,-,~,-,-
+Free-text notes,~,Y,Y,-,Y,-,-,-

@@ -1,0 +1,4 @@
+dataset,status,type,license,n_files,total_rows,access,note
+IPUMS USA Linked Representative Samples (LRS),doc_sourced,restricted,Restricted (account required),0,~50M linked records,Account required,Doc-sourced only; requires IPUMS account.
+IPUMS USA Multigenerational Longitudinal Panel (MLP),doc_sourced,restricted,Restricted (account required),0,~100M records,Account required,Doc-sourced only; requires IPUMS account.
+IPUMS International NAPP,doc_sourced,restricted,Restricted (account required),0,~100M records across countries,Account required,Doc-sourced only; requires IPUMS account.

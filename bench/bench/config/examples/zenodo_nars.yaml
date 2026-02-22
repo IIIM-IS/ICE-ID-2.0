@@ -1,0 +1,38 @@
+name: zenodo_nars
+
+seed: 42
+
+dataset:
+  name: abt_buy
+  data_dir: zenodo_data
+
+blocking:
+  name: token_blocking
+  params:
+    fields: [name, description]
+    min_token_length: 3
+
+pairs:
+  train_ratio: 0.7
+  cap: 10000
+
+model:
+  name: nars
+  params:
+    pool_size: 5000
+    n_patterns: 10
+    k: 1.0
+    preprocess: generic
+
+calibration:
+  name: fixed_threshold
+  params: {}
+
+clustering:
+  name: connected_components
+  params: {}
+
+metrics:
+  pairwise: [precision, recall, f1, auc]
+  clustering: [ari]
+

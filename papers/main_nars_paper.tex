@@ -34,7 +34,9 @@
 \usepackage{amsfonts}       % blackboard math symbols
 \usepackage{nicefrac}       % compact symbols for 1/2, etc.
 \usepackage{microtype}      % microtypography
-\usepackage{xcolor}         % colors
+% xcolor already loaded with [table] option above
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta}
 
 
 \title{Non-Axiomatic Reasoning for Longitudinal Identity Resolution: NARS on ICE-ID and Standard ER Benchmarks}
@@ -75,19 +77,18 @@
 
 
 \begin{abstract}
-We evaluate OpenNARS-for-Applications (ONA) for longitudinal identity resolution on Icelandic historical census data spanning 220 years (1703–1920), and we report results on standard entity resolution datasets (Abt–Buy, Amazon–Google, DBLP–ACM, DBLP–Scholar). NARS is a general-purpose AI framework designed to reason with limited knowledge and resources; its core is Non-Axiomatic Logic (NAL), a term-based logic. Our experiments show that this evidence-based symbolic matcher can serve as a transparent baseline alongside classical probabilistic linkage and modern neural matchers. We report pairwise metrics and calibration sensitivity on ICE-ID, and we compare against strong baselines across datasets.
+We evaluate OpenNARS-for-Applications (ONA) for longitudinal identity resolution on Icelandic historical census data spanning 220 years (1703--1920), while benchmarking it on standard entity resolution datasets (Abt--Buy, Amazon--Google, DBLP--ACM, DBLP--Scholar) \cite{Kopcke2010, mudgal2018deep}. NARS is a general-purpose AI framework designed to reason with limited knowledge and resources; its core is Non-Axiomatic Logic (NAL), a term-based logic. Our experiments show that this evidence-based symbolic matcher can serve as a transparent baseline alongside classical probabilistic linkage and modern neural matchers. We report pairwise metrics, calibration sensitivity, and a deployment-faithful candidate-graph evaluation on ICE-ID, and compare against strong baselines across standard ER datasets.
 \end{abstract}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%% INTRODUCTION %%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 \section{Introduction}
 
-Linking historical census records is an important step in research on social mobility, demographic change, migration, and epidemiology, yet it remains arduous because names mutate, fields are missing, and administrative borders shift over time \cite{ruggles2018historical}.  
-While supervised matchers trained on labelled pairs improved accuracy for nineteenth-century U.S.\ censuses \cite{feigenbaum2016}, most census-specific benchmarks still oversimplify the problem: they cover only short time ranges (often a single decade), omit kinship structure, and treat geography as flat text rather than a hierarchy \cite{papadakis2023}.  
+Linking historical census records is an important step in research on social mobility, demographic change, migration, and epidemiology, yet it remains arduous because names mutate, fields are missing, and administrative borders shift over time \cite{ruggles2018historical, bailey2020}.  
+While supervised matchers trained on labeled pairs improved accuracy for nineteenth-century U.S.\ censuses \cite{feigenbaum2016}, most census-specific benchmarks still oversimplify the problem: they cover only short time ranges (often a single decade), omit kinship structure, and treat geography as flat text rather than a hierarchy \cite{papadakis2023}.  
 
-Carefully curated benchmarks can transform fields in other domains: \emph{ClimSim}––a large-scale climate simulation dataset––unlocked hybrid physics–ML climate modelling \cite{ClimSim2024}; \emph{DecodingTrust}––a trustworthiness evaluation suite for frontier LLMs––exposed safety gaps in modern language models \cite{DecodingTrust2023}; the \emph{PRISM Alignment Dataset}––a cross-cultural human-feedback resource––broadened evaluation of alignment techniques across diverse regions \cite{PRISM2024}.  
-Inspired by these successes, we release \textbf{ICE-ID}, the first large-scale open benchmark focused on \emph{long-term} person matching in a national population.  
-Spanning eight Icelandic censuses (1703–1920) and covering more than 220 years, ICE-ID contains 984\,028 raw rows and 200 k high-confidence cluster labels created by domain experts.  
+Benchmark design strongly shapes progress in entity resolution and record linkage. We release \textbf{ICE-ID} to fill a missing setting: long-horizon longitudinal person matching with temporal drift, hierarchical geography, and expert-curated identity clusters.  
+Spanning 16 Icelandic census waves (1703--1920) and covering more than 220 years, ICE-ID contains 984\,028 rows and 226,864 expert-curated person clusters.  
 
 We formulate two tasks:
 
@@ -96,40 +97,44 @@ We formulate two tasks:
   \item \textbf{Cross-census linkage}: identify the same individual across successive censuses despite spelling drift and age progression.
 \end{enumerate}
 
-Train/dev/test splits follow a strictly temporal protocol: pre-1870 rows for training, 1870–1900 for validation, and 1901–1920 for held-out testing, mirroring real archival workflows.  
+Train/validation/test splits follow a strictly temporal protocol: rows up to 1870 for training, 1871--1890 for validation, and 1891--1920 for held-out testing, mirroring real archival workflows.  
 Evaluation combines pairwise metrics (precision, recall, F$_1$, ROC-AUC) with clustering quality (Adjusted Rand Index, ARI).
 
-We benchmark four model families:
+We benchmark several model families:
 
 \begin{itemize}
-  \item \emph{Deterministic rules}: phonetic and location blocking with Jaro–Winkler and hierarchical filters;
+  \item \emph{Classical probabilistic linkage}: Fellegi--Sunter and deterministic rule-based matchers;
   \item \emph{Symbolic reasoning}: a Non-Axiomatic Reasoning System (NARS) that learns identity rules from streaming examples;
-  \item \emph{Deep tabular networks}: TabNet \cite{arik2019tabnet}, TabTransformer \cite{huang2020tabtransformer}, and FT-Transformer \cite{gorishniy2021revisiting}, evaluated under distribution-shift benchmarks TableShift \cite{gardner2023tableshift} and TabReD \cite{rubachev2024tabred}.
+  \item \emph{Neural matchers}: Ditto \cite{Li2020DeepEM}, HierGAT \cite{yao2022hiergat}, and zero-shot/LLM-based methods (AnyMatch \cite{zhang2024anymatch}, MatchGPT).
 \end{itemize}
 
-Our results confirm that transformer-style tabular models outperform classical heuristics on in-distribution data but lose up to 30\% F$_1$ when evaluated on censuses 50 years after their training period, whereas NARS degrades more gracefully.  
-These findings underline the need for \emph{hybrid} pipelines that fuse symbolic and neural evidence when tackling deeply non-stationary historical data.
+Our results show that NARS achieves competitive pairwise accuracy (F$_1$=0.994 on ICE-ID) using only symbolic judgment-based scoring, without deep representation learning or GPU resources. On standard ER benchmarks (DBLP--ACM, DBLP--Scholar), NARS matches or exceeds reported state-of-the-art F$_1$, while remaining below SOTA on product-matching datasets (Abt--Buy, Amazon--Google).
+These findings suggest that symbolic reasoning can serve as a strong, transparent baseline for entity resolution, and motivate \emph{hybrid} pipelines that fuse symbolic and neural evidence.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%% METHODS %%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 \section{Methods}
 \label{sec:methods}
-We propose a dual‐task identity resolution benchmark evaluating matching within a single census (“within”) and across censuses (“across”).
-
-We benchmark a Non-Axiomatic Reasoning System (NARS) for longitudinal identity resolution on Icelandic historical census data. This section outlines the dataset, NARS methodology, experimental design, and evaluation metrics.
+This section describes the ICE-ID benchmark, the NARS matcher, baselines, and evaluation protocol.
 
 \subsection{ICE-ID Benchmark}
-We evaluate on ICE-ID \cite{iceid2024}, a benchmark of 984,028 Icelandic census records (1703--1920) with 200,000+ expert-labeled person clusters. We use the canonical temporal splits (pre-1870 train / 1870--1900 val / 1901--1920 test) and report pairwise metrics (Precision, Recall, F$_1$, AUC), clustering metrics (ARI, B³), and ranking metrics (P@K, R@K). Full dataset documentation is in the companion data paper.
+We evaluate on ICE-ID \cite{iceid2024}, a benchmark of 984,028 Icelandic census records (1703--1920) with 226,864 expert-labeled person clusters. We use the canonical temporal splits (up to 1870 train / 1871--1890 validation / 1891--1920 test) and report pairwise metrics (Precision, Recall, F$_1$, AUC), clustering metrics (ARI, B$^3$), and ranking metrics (P@k, R@k). Full dataset documentation is in the companion data paper.
+
+\subsubsection{Data Preparation}
+Records are loaded from \texttt{people.csv} with string columns normalized to lowercase and numeric fields (\texttt{id}, \texttt{heimild}, \texttt{birthyear}, \texttt{person}, and geographic/kinship IDs) coerced to integers. Missing IDs are dropped; missing name fields are filled with empty strings. NARS and the symbolic matchers operate directly on these record pairs; the ML ensemble baseline uses pairwise TF-IDF features over concatenated record text. All ICE-ID experiments under the shared protocol use the same raw record representation and temporal splits keyed by \texttt{heimild}.
+
+\subsubsection{Pair Construction and Sampling}
+Positive pairs are drawn from expert-labeled clusters: two records share a positive label if they share the same \texttt{person} (or equivalent) ID. For \emph{cross-wave} linkage, the benchmark supports pair generation across distinct census-year windows (e.g., source and target year ranges) via the same cluster semantics. Negatives are formed by sampling pairs whose records belong to different clusters. We use a 2:1 negative-to-positive ratio when building the labeled set within each split. For ICE-ID, pair generation and any subsampling are performed \emph{inside} the fixed temporal splits (train: up to 1870, validation: 1871--1890, test: 1891--1920); no random train/validation/test split is applied across years. If the number of candidate pairs in a split exceeds 50,000, we uniformly subsample that split to the cap so that NARS and the ML baselines are evaluated on the same bounded pair set. The implementation uses a configurable cap of 50,000 pairs and does not impose a same-census-year constraint on negatives; within-wave evaluation can be obtained by restricting the record pool to a single \texttt{heimild} in a given run.
 
 \subsection{ML Ensemble Baseline}
 
-As a baseline, we compare against an ensemble of four GPU-accelerated tree classifiers (XGBoost, LightGBM, CatBoost, Random Forest) averaging match probabilities. The ensemble is trained on the same sparse features as NARS with 10-fold cross-validation. Full details are provided in the ICE-ID data paper.
+As a baseline, we compare against an ensemble of four tree-based classifiers (XGBoost, LightGBM, CatBoost, Random Forest) averaging match probabilities. The ensemble is trained on pairwise text-derived and structured comparison features computed from the same raw record pairs used by NARS. Model selection uses 10-fold cross-validation within the training split; final evaluation uses the same held-out validation and test splits as NARS. Full details are provided in the ICE-ID data paper.
 
 \subsection{OpenNARS-for-Applications}
 
-\textbf{Implementation:} We use OpenNARS-for-Applications (ONA) as the underlying NARS engine. Record pairs are converted into Narsese statements encoding attribute agreements and disagreements, fed to ONA as experience, and scored via ONA's truth values.
+\textbf{Implementation:} We use OpenNARS-for-Applications (ONA) as the underlying NARS engine. ONA defines the judgment vocabulary and evidence framework; record pairs are converted into Narsese statements encoding attribute agreements and disagreements. The reported experiments use the LLR scoring instantiation described in the ``Practical scoring variant'' paragraph below.
 
-\textbf{Algorithm Overview:} Figure~\ref{fig:algo} summarizes the procedure without requiring additional LaTeX packages.
+\textbf{Algorithm Overview:} Figure~\ref{fig:algo} summarizes the procedure.
 
 \begin{figure}[H]
   \centering
@@ -150,51 +155,67 @@ As a baseline, we compare against an ensemble of four GPU-accelerated tree class
     \hspace*{1em}predict match if score $\geq \tau$
     \end{minipage}%
   }
-  \caption{OpenNARS-for-Applications entity resolution procedure (pseudocode).}
+  \caption{Conceptual NARS entity resolution procedure (pseudocode). Reported experiments use the LLR scoring variant described below.}
   \label{fig:algo}
 \end{figure}
 
-\textbf{Complexity:} $O(N \cdot n \cdot |J|)$ where $N$ = pairs, $n$ = patterns used, $|J|$ = average judgment set size. Pool updates are $O(\log P)$ with priority queue.
+This pseudocode illustrates the conceptual pattern-pool formulation for intuition; the reported implementation replaces Step~3's revision-based scoring with the LLR scorer described below.
 
-Our OpenNARS-for-Applications implementation for identity resolution involves:
+\textbf{Complexity:} Conceptual pattern-pool scoring is $O(N \cdot n \cdot |J|)$ where $N$ = pairs, $n$ = reference patterns, $|J|$ = judgments per pair; the LLR variant reduces to $O(N \cdot |J|)$ since each judgment maps to a precomputed log-ratio.
+
+The LLR scoring pipeline used in all reported experiments proceeds as follows:
 \begin{enumerate}
-    \item \textbf{Feature Engineering for NARS Statements:} A preprocessing function (\texttt{preprocess\_iceid}) generates descriptive statements (e.g., ``name\_exact\_match'', ``birthyear\_compatible\_within\_threshold'') from pairs of records $(r_1, r_2)$, considering attributes like name, birth year (vs. an age disparity threshold), sex, census year (\texttt{heimild}), location, and familial links.
-    \item \textbf{Pattern Pool and Learning:} NARS maintains a \texttt{PatternPool} (e.g., 10,000 patterns) storing statement sets with evidence-based truth values (frequency, confidence). It learns from labeled pairs (matches/non-matches), updating pattern truth values (e.g., Truth(f=1.0, c=0.9) for a match) and prioritizing patterns with higher evidential support.
-    \item \textbf{Scoring Queries:} For new record pairs, attributes are converted to a query pattern. The similarity score is derived from matching patterns in the \texttt{PatternPool}, reflecting the belief in a match.
+    \item \textbf{Judgment Generation.} A preprocessing function (\texttt{preprocess\_iceid}) converts each record pair $(r_1, r_2)$ into a set of atomic judgments (e.g., \texttt{same\_nafn\_norm}, \texttt{birthyear\_close}) based on attribute comparisons for name, birth year, sex, census year (\texttt{heimild}), and location.
+    \item \textbf{Evidence Accumulation.} During training, each labeled pair increments per-judgment positive or negative counts (with Laplace $+1$ smoothing). The accumulated counts yield a log-likelihood ratio $\mathrm{LLR}_j = \log\frac{P(j \mid \text{match})}{P(j \mid \text{non-match})}$ for every judgment type $j$.
+    \item \textbf{Pair Scoring.} For a new pair, the generated judgments are looked up in the LLR table, summed with a base-rate log-prior, and passed through a sigmoid to produce a match probability.
 \end{enumerate}
 
-\textbf{Pattern}: Two rows of census data can be used to obtain an atomic pattern, which contains all the judgments (with no order), and a default truth-value (1, 0.9) when these two rows come from the same individual, otherwise the truth-value will be (0, 0.9).
+\subsubsection{Conceptual NARS Formulation (Background)}
+\label{subsec:conceptual_nars}
+The following pattern, pattern-pool, and revision rules describe the conceptual NARS formulation that motivates the design. They establish the correspondence with Non-Axiomatic Logic (see Appendix~\ref{subsec:nars_background}) but are \emph{not} used in the reported experiments, which rely on the LLR scoring pipeline above.
 
-\textbf{Pattern Pool}: The pattern pool contains patterns, sorted in ascending order of the expectation of the truth-value.
+\textbf{Pattern.} A pair of census records yields an atomic pattern: the unordered set of all generated judgments, annotated with truth-value $(1, 0.9)$ if the records belong to the same individual or $(0, 0.9)$ otherwise.
 
-\textbf{Inference Rule}: Since the system proposed here is very different from the classical design of NARS, new inference rules will be proposed. Suppose there are any two patterns, say $p_1$ and $p_2$, which contain judgments $j_1$ and $j_2$ respectively, and the truth-values are $t_1$ and $t_2$. The proposed inference rule can be used on any two patterns to get three new patterns, namely:
+\textbf{Pattern Pool.} The pattern pool contains patterns, sorted in ascending order of the expectation of the truth-value.
+
+\textbf{Inference Rule.} Given two patterns $p_1$ and $p_2$ containing judgment sets $j_1$ and $j_2$ with truth-values $t_1$ and $t_2$, the proposed inference rule derives three new patterns:
 
 \begin{enumerate}
-    \item The judgment of the new pattern is $j_1 -j_2$, and the truth-value is $t_1$.
-    \item The judgment of the new pattern is $j_2 - j_1$, and the truth-value is $t_2$.
-    \item The judgment of the new pattern is $j_1\cap j_2$, and the truth-value is $revise(t_1, t_2)$.
+    \item The judgment set of the new pattern is $j_1 \setminus j_2$, and the truth-value is $t_1$.
+    \item The judgment set of the new pattern is $j_2 \setminus j_1$, and the truth-value is $t_2$.
+    \item The judgment set of the new pattern is $j_1 \cap j_2$, and the truth-value is $\mathrm{revise}(t_1, t_2)$.
 \end{enumerate}
 
-Such reasoning rules can ensure that the truth-value of the new pattern is completely inherited from the parent pattern, rather than being fabricated. For case 1, the evidence contributes to $t_1$ must also contribute to the new pattern. Since the new pattern is a sub-pattern, though as a more general case, its truth-value may be revised with patterns obtained from other resources. So does the second case. 
+These rules ensure that each derived truth-value is inherited from parent evidence rather than fabricated. In case 1, evidence contributing to $t_1$ also supports the new sub-pattern; its truth-value may later be revised with independently obtained patterns. Case 2 is symmetric.
 
-For case 3, except for the single evidence contributes to the truth-value, since the new pattern is the sub-pattern of both parent parents, both $t_1$ and $t_2$ will contribute to the truth-value, thus the revision is used. Note that to avoid the recursive contribution of evidence, only patterns obtained from independent resources can be used in reasoning.
+In case 3, the intersection pattern is a sub-pattern of both parents, so both $t_1$ and $t_2$ contribute evidence and revision merges them. To avoid double-counting, only patterns derived from independent evidence sources may participate in a single revision step.
 
-\textbf{Learning as Recognition}: Based on the two census records, a pattern can be obtained. Identifying whether these two records come from the same individual is done by judging the degree of matching between this pattern and the existed pattern. In this process, patterns will be generated and may update the truth-value of some existed patterns.
+\textbf{Learning as Recognition.} In the conceptual formulation, the system constructs a query pattern and measures its overlap with existing patterns in the pool. The degree of overlap determines the match score. During this process, new patterns may be added to the pool and existing truth-values may be updated.
 
-To convert NARS’s graded match scores into binary decisions, we calibrate a threshold on labeled pairs. For ICE-ID, after seeding the pool with both positive and negative patterns, we score \emph{all} seeded pairs (with \texttt{learn=false}) to obtain two score distributions. We then set
+In the conceptual formulation, the final expectation score can be thresholded to obtain a binary match decision. In the reported implementation, threshold calibration is performed in the deployed LLR pipeline described below.
+
+
+\emph{Conceptual truth-value scoring (not used in reported experiments).} At scoring time, up to $n$ reference patterns are retrieved from the pool---half with the highest expectation (likely matches) and half with the lowest (likely non-matches)---to provide balanced evidence. For each reference pattern, a pairwise truth-value is computed: frequency $f$ equals the size of the judgment intersection divided by the size of the longer pattern, and confidence $c$ is inherited from the longer (more specific) pattern. These pairwise truth-values are then merged via revision, and the final expectation $e$ serves as the match score: higher $e$ indicates stronger evidence that the two records belong to the same individual.
+
+\textbf{Practical scoring variant (summary).} The LLR pipeline described above replaces truth-value revision with per-judgment log-likelihood ratios (Laplace-smoothed). The pair score is $\sigma\!\bigl(\sum_j \mathrm{LLR}_j + \log\tfrac{p}{1-p}\bigr)$, where $\sigma$ is the logistic sigmoid and $p$ is the training-set base rate. Table~\ref{tab:hyperparams} documents the parameters.
+
+\subsubsection{Threshold Calibration (Deployed LLR Pipeline)}
+\label{subsec:threshold_calibration}
+
+To convert LLR-based match probabilities into binary decisions, we calibrate a threshold on labeled validation pairs. For ICE-ID, after accumulating LLR statistics from training pairs, we score the held-out validation set to obtain separate positive and negative score distributions. We then set
 \[
   \tau \;=\; \frac{\mathrm{median}(\text{pos\_scores}) + \mathrm{median}(\text{neg\_scores})}{2}.
 \]
-At test time, any pair with score~$\ge\tau$ is predicted as a match, otherwise as a non‐match. For classic ER benchmarks, we instead select $\tau$ to maximize validation F$_1$ to handle extreme class imbalance.
+At test time, any pair with score~$\ge\tau$ is predicted as a match, otherwise as a non-match. For classic ER benchmarks, we instead select $\tau$ to maximize validation F$_1$ to handle extreme class imbalance.
 
-\textbf{Calibration Split:} For ICE-ID, we compute $\tau$ exclusively on a held-out 20\% subset of training pairs (the ``calibration split''), ensuring no leakage from validation or test data.
+\textbf{Calibration Split:} For ICE-ID, we compute $\tau$ on the held-out validation pairs, ensuring no leakage from test data.
 
-\textbf{Calibration Sensitivity:} Table~\ref{tab:calibration_sensitivity} reports F$_1$ under different threshold strategies:
+\textbf{Calibration Sensitivity:} Table~\ref{tab:calibration_sensitivity} reports four representative threshold strategies:
 
 \begin{table}[H]
   \centering
   \small
-  \caption{Threshold calibration sensitivity on ICE-ID. All strategies achieve near-identical performance due to well-separated score distributions. Data from \texttt{bench/paper\_artifacts/plot\_data/calibration\_sensitivity.json}.}
+  \caption{Threshold calibration sensitivity on ICE-ID. All strategies achieve near-identical performance due to well-separated score distributions.}
   \label{tab:calibration_sensitivity}
   \begin{tabular}{lcc}
     \toprule
@@ -208,7 +229,7 @@ At test time, any pair with score~$\ge\tau$ is predicted as a match, otherwise a
   \end{tabular}
 \end{table}
 
-The calibration sensitivity values in Table~\ref{tab:calibration_sensitivity} are generated from the saved artifact files produced by the current NARS implementation. On ICE-ID with well-separated positive/negative score distributions, all calibration strategies achieve near-identical F$_1$ ($\approx$0.995--0.996), demonstrating that NARS produces naturally calibrated scores when training data is representative.
+On ICE-ID with well-separated positive/negative score distributions, all shown strategies achieve near-identical F$_1$ ($\approx$0.995--0.996).
 
 \begin{figure}[H]
   \centering
@@ -217,134 +238,139 @@ The calibration sensitivity values in Table~\ref{tab:calibration_sensitivity} ar
   \label{fig:calibration}
 \end{figure}
 
-
-Each time, up to $n$ patterns in the pattern pool will be used for recognition, half of which come from those with higher expectations and half from those with lower expectations, aiming to find the most reliable patterns obtained from the same individual and from different individuals. When discussing the degree of match, we use another truth-value to describe it. The $f$ is the length of the intersection of the two patterns’ judgment to the longest one. The $c$ is the $c$ of the longest pattern. We choose to compare with the longest pattern since the longer pattern contains more judgments and is therefore more specific. Then we revise all the truth-values and take its $e$. The higher the $e$, the more the two rows are from the same individual.
+Figure~\ref{fig:calibration} mirrors Table~\ref{tab:calibration_sensitivity}: the spread between best and worst shown F$_1$ is about 0.001, so thresholding choice has limited impact under this ICE-ID setup.
 
 \subsubsection{Computational Resources}
 \label{subsec:comp_resources}
-Experiments were run on an Intel\textsuperscript{\textregistered} Core\textsuperscript{TM} Ultra 9 185H system with 32GB RAM. The full benchmark (10 runs, 2 modes) took approximately 2 hours.
+Experiments were run on an Intel\textsuperscript{\textregistered} Core\textsuperscript{TM} Ultra 9 185H system with 32GB RAM. The NARS benchmark runs reported here (10 runs across pairwise-benchmark and candidate-graph evaluation modes) took approximately 2 hours.
 
 \subsubsection{Hyperparameters and Reproducibility}
 \label{subsec:hyperparams}
 
-Table~\ref{tab:hyperparams} documents all NARS hyperparameters used in our experiments.
+Table~\ref{tab:hyperparams} documents the LLR scoring configuration used in all reported experiments.
 
 \begin{table}[H]
   \centering
   \small
-  \caption{NARS hyperparameters.}
+  \caption{NARS LLR scoring parameters.}
   \label{tab:hyperparams}
   \begin{tabular}{lcc}
     \toprule
     \textbf{Parameter} & \textbf{Value} & \textbf{Description} \\
     \midrule
-    Pool size & 10,000 & Maximum patterns in pool \\
-    $n$ (patterns used) & 10 & Patterns for recognition \\
-    $k$ (confidence constant) & 1.0 & NAL evidence horizon \\
-    Initial confidence & 0.9 & Default pattern confidence \\
-    Threshold $\tau$ & Calibrated & Median-midpoint of scores \\
+    Smoothing & Laplace ($+1$) & Pseudocount for LLR estimation \\
+    LLR clamp & $[-5, 5]$ & Log-likelihood ratio bounds \\
+    Threshold $\tau$ & Calibrated & Median-midpoint (ICE-ID) or validation F$_1$ (classic ER) \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-\textbf{Judgment Vocabulary.} The complete set of atomic judgments generated by \texttt{preprocess\_iceid}:
+These settings define the evidence weighting and decision boundary used by the matcher; the per-dataset threshold remains data-driven via calibration.
+
+\textbf{Judgment Vocabulary.} The principal atomic judgments generated by \texttt{preprocess\_iceid}:
 
 \begin{itemize}
   \item \textbf{Name}: \texttt{same\_nafn\_norm}, \texttt{different\_nafn\_norm}, \texttt{same\_first\_name}, \texttt{different\_first\_name}, \texttt{same\_patronym}, \texttt{different\_patronym}, \texttt{same\_surname}, \texttt{different\_surname}
-  \item \textbf{Birthyear}: \texttt{same\_birthyear}, \texttt{birthyear\_compatible}, \texttt{different\_birthyear}
+  \item \textbf{Birthyear}: \texttt{same\_birthyear}, \texttt{birthyear\_very\_close} ($\le$2 yr), \texttt{birthyear\_close} ($\le$5 yr), \texttt{different\_birthyear}
   \item \textbf{Demographics}: \texttt{same\_sex}, \texttt{different\_sex}, \texttt{same\_marriagestatus}, \texttt{different\_marriagestatus}
-  \item \textbf{Geography}: \texttt{same\_farm}, \texttt{same\_parish}, \texttt{same\_district}, \texttt{same\_county}, \texttt{different\_farm}, etc.
+  \item \textbf{Geography}: \texttt{same\_farm}, \texttt{same\_parish}, \texttt{same\_district}, \texttt{same\_county}, \texttt{different\_farm}, \texttt{different\_parish}, \texttt{different\_district}, \texttt{different\_county}
   \item \textbf{Temporal}: \texttt{differ\_in\_X\_years} (where X = |heimild$_1$ - heimild$_2$|)
 \end{itemize}
 
-\textbf{Complexity.} Matching scales as $O(N \cdot n \cdot |J|)$ where $N$ is the number of scored pairs, $n$ is the number of reference patterns used, and $|J|$ is the average number of generated judgments per pair.
+The full list of emitted judgment tokens is defined in \texttt{preprocess\_iceid} and the dataset-specific preprocessors in the released code repository.
+
+\textbf{Complexity.} In the LLR variant, matching scales as $O(N \cdot |J|)$ where $N$ is the number of scored pairs and $|J|$ is the average number of generated judgments per pair.
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%% RESULTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+%%%%%%%%%%%%%%%%%%%%%%%%%% RESULTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Results}
+
+\textbf{Evaluation protocols.} We report results under two distinct evaluation regimes, which are \emph{not directly comparable} in absolute terms:
+\begin{enumerate}
+  \item \textbf{Pairwise benchmark} (Tables~\ref{tab:iceid_results}, \ref{tab:comprehensive_baselines}, \ref{tab:nars_horizontal}, \ref{tab:ablations}): labeled pair classification on balanced samples (2:1 negative-to-positive ratio, capped at 50k pairs). ICE-ID uses fixed temporal train/validation/test splits by census year; classic ER datasets use their benchmark-provided splits. The ICE-ID positive rate is approximately 33.3\% under the 2:1 sampling design.
+  \item \textbf{Candidate-graph evaluation} (Table~\ref{tab:nars_graph_eval}): NARS scored on a candidate graph produced by token blocking, with realistic positive rate ($\approx$1\%). Metrics include ranking (P@k, R@k) and clustering (ARI, B$^3$).
+\end{enumerate}
+
 \begin{table}[H]
   \centering
   \small
-  \caption{ICE-ID pairwise results (F$_1$) from the benchmark runs.}
+  \caption{ICE-ID pairwise results (F$_1$) from the benchmark runs, ordered by F$_1$. Ditto and HierGAT use their own data preparation and train/test splits. MatchGPT was evaluated on only 50 pairs.}
   \label{tab:iceid_results}
-  \begin{tabular}{lc}
+  \begin{tabular}{lcc}
     \toprule
-    \textbf{Model} & \textbf{F$_1$} \\
+    \textbf{Model} & \textbf{F$_1$} & \textbf{Note} \\
     \midrule
-    Ditto & 1.000 \\
-    HierGAT & 1.000 \\
-    Fellegi--Sunter & 0.950 \\
-    Rules & 0.948 \\
-    AnyMatch & 0.907 \\
-    NARS & 0.994 \\
-    MatchGPT & 0.276 \\
+    Ditto & \textbf{0.997} & Separate eval \\
+    NARS & 0.994 & --- \\
+    Fellegi--Sunter & 0.994 & --- \\
+    Rules & 0.990 & --- \\
+    AnyMatch & 0.907 & --- \\
+    HierGAT & 0.857 & Separate eval \\
+    MatchGPT & 0.276 & 50 pairs only \\
     \bottomrule
   \end{tabular}
 \end{table}
 
 \subsection{ICE-ID Results}\label{sec:NARSResults}
 
-Table~\ref{tab:iceid_results} summarizes pairwise performance on ICE-ID. Neural matchers (Ditto, HierGAT) achieve perfect scores, classical probabilistic linkage remains strong, and AnyMatch transfers well without dataset-specific training. Under a strict temporal evaluation with hard negatives sampled within blocking partitions, OpenNARS achieves strong pairwise performance (F$_1$=0.994, AUC=0.998), indicating that symbolic agreement patterns capture much of the discriminative signal in ICE-ID when candidate generation is realistic.
+Table~\ref{tab:iceid_results} summarizes pairwise performance on ICE-ID. Under our shared evaluation protocol, NARS and Fellegi--Sunter both reach F$_1$=0.994; classical probabilistic linkage is surprisingly competitive on this well-structured dataset \cite{fellegi1969theory, Sayers2015ProbabilisticRL, Newcombe1959AutomaticLO}. Ditto reports the highest F$_1$ (0.997) under its own data preparation and splits, while HierGAT (0.857) underperforms under its separate pipeline. AnyMatch transfers well without dataset-specific training (0.907). The NARS result (F$_1$=0.994, AUC=0.998) shows that symbolic judgment-based evidence captures most of the discriminative signal in the pairwise benchmark setting. MatchGPT was evaluated on only 50 pairs per dataset, so its scores should be interpreted with caution.
 
-\subsection{Metric Sanity Checks and Interpretation}
+\subsection{Pairwise--Cluster Mismatch}
 \label{sec:sanity_checks}
 
-The near-zero ARI values (on the order of $10^{-6}$) and P@K = 0 for the ML ensemble warrant careful interpretation. We performed sanity checks with a random baseline to contextualize these results.
+Clustering and ranking metrics can diverge from pairwise classification metrics depending on the evaluation protocol. When pairs are sampled independently (as in the pairwise benchmark) rather than drawn from a complete candidate graph, connected-component clustering cannot fully enforce transitivity, and ARI-CC may fall well below what the pairwise F$_1$ would suggest---though on ICE-ID the pairwise benchmark still yields ARI-CC=0.881 (Table~\ref{tab:nars_horizontal}), indicating that the divergence is protocol-dependent rather than inevitable. In the pairwise benchmark, ARI-CC is computed on an induced graph over the sampled pair set (not on a deployment-style full candidate graph), which is why it should be interpreted separately from the candidate-graph clustering results in Table~\ref{tab:nars_graph_eval}. Similarly, P@k depends on the score ranking, not just the threshold, so models with high F$_1$ may still rank poorly.
 
-\textbf{Random Baseline.} A random scorer assigning uniform $[0,1]$ scores achieves ARI $\approx 0$ and P@K $\approx$ (positive rate), confirming that our ARI computation is correct---the near-zero values reflect genuine clustering incoherence rather than implementation errors.
+A random scorer on the same sampled graph confirms this: it yields ARI-CC~$\approx 0$ and P@k~$\approx$ the positive rate, matching the behavior expected under sparse sampling. This is a protocol artifact, not an implementation error.
 
-\textbf{Why ARI $\approx 0$?} The ARI computation uses connected-component clustering on the thresholded pairwise similarity graph. With sparse sampling (diagnostic batches of 2,000 pairs from 100,000 candidates), most true clusters are fragmented across batches, yielding random-like cluster assignments. This is a \emph{sampling artifact}: when pairs are sampled independently rather than drawn from complete candidate graphs, transitivity cannot be enforced, and ARI approaches zero regardless of pairwise accuracy.
-
-\textbf{Why P@K = 0 for ML ensemble?} P@K measures whether the top-$K$ scored pairs (where $K$ = number of positives) are true matches. With calibrated thresholds optimized for F$_1$, the ML ensemble's score distribution may not rank positives highest despite achieving high pairwise F$_1$. NARS's pattern-based scoring produces more naturally ordered rankings, explaining its non-zero P@K.
-
-\textbf{Implication.} These results underscore the \emph{Pairwise-Cluster Disconnect}: high pairwise metrics do not guarantee good clustering or ranking performance. Entity resolution pipelines must be evaluated end-to-end on the downstream task (clustering) rather than just pairwise classification.
+\textbf{Implication.} High pairwise metrics do not guarantee good clustering or ranking performance. Entity resolution pipelines should be evaluated end-to-end on the downstream task (clustering on a candidate graph) rather than on pairwise classification alone. We present such a graph-based evaluation for NARS in the next section.
 
 \subsection{End-to-End Graph Evaluation (Ranking, Clustering, Cost)}
 \label{sec:nars_graph_eval}
 
-To avoid overly optimistic pair sampling, we evaluate NARS on a \emph{candidate graph} produced by token blocking, then compute ranking and clustering metrics on the resulting scored edges. We report all numbers directly from the saved artifact file \texttt{bench/paper\_artifacts/nars\_graph\_eval.json}.
+To avoid overly optimistic pair sampling, we evaluate NARS on a candidate graph produced by token blocking \cite{Papadakis2019ASO, Christen2012ASO}, then compute ranking and clustering metrics on the resulting scored edges.
 
 \begin{table}[H]
   \centering
   \small
-  \caption{NARS end-to-end evaluation on an ICE-ID candidate graph (token blocking). Ranking metrics use $k$ equal to the number of positives among scored pairs. Clustering is computed by connected components on thresholded edges.}
+  \caption{NARS end-to-end evaluation on an ICE-ID candidate graph (token blocking, 407{,}934 scored pairs, $\tau$=0.16, re-calibrated on candidate-graph validation scores). Ranking metrics use $k$ equal to the number of positives. Clustering uses connected components on thresholded edges.}
   \label{tab:nars_graph_eval}
-  \begin{tabular}{lcccccc}
+  \begin{tabular}{lccccccccc}
     \toprule
-    \textbf{Pairs scored} & \textbf{Pos rate} & \textbf{P@k} & \textbf{R@k} & \textbf{ARI-CC} & \textbf{B$^3$ F$_1$} & \textbf{Time (fit+score)} \\
+    \textbf{Pairs} & \textbf{Pos rate} & \textbf{F$_1$} & \textbf{AUC} & \textbf{P@k} & \textbf{R@k} & \textbf{ARI-CC} & \textbf{B$^3$ P} & \textbf{B$^3$ R} & \textbf{B$^3$ F$_1$} \\
     \midrule
-    2,000 & 0.009 & 0.111 & 0.111 & 0.003 & 0.520 & 91.3s \\
+    407{,}934 & 0.013 & 0.473 & 1.000 & 0.961 & 0.961 & $<$0.001 & 0.218 & 0.997 & 0.358 \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-Table~\ref{tab:nars_graph_eval} shows that under realistic candidate generation (pos rate $\approx 0.9\%$), NARS achieves moderate ranking performance (P@k=R@k=0.111). B$^3$ F$_1$=0.520 reflects a trade-off: high cluster precision (B$^3$ precision=0.828) but lower cluster recall (B$^3$ recall=0.379), indicating that the model is conservative in merging clusters. The runtime and memory footprint are also reported in the same artifact (peak RSS $\approx$ 1572 MB).
+Table~\ref{tab:nars_graph_eval} shows NARS on a realistic candidate graph (pos rate $\approx 1.3\%$) with a re-calibrated threshold ($\tau$=0.16). Threshold-independent ranking metrics are strong: P@k and R@k both reach 0.961 and AUC is effectively 1.000, confirming that NARS's score ordering is near-perfect even under heavy class imbalance. However, threshold-dependent pairwise F$_1$ drops to 0.473 because the low threshold needed for high recall produces many false positives (precision=0.310). B$^3$ metrics mirror this trade-off: B$^3$ recall is 0.997 (nearly all true links are found) but B$^3$ precision is only 0.218 (clusters are over-merged). ARI-CC remains near zero because connected-component clustering on a sparse thresholded graph is dominated by a few large merged clusters. This highlights that while NARS discriminates well (AUC reported as 1.000, P@k=0.961), converting its scores into hard clusters on a realistic graph requires more sophisticated post-processing than simple thresholding.
 
 \subsection{Comprehensive Baseline Comparison}
 
-We evaluate NARS against a comprehensive set of baselines on ICE-ID and standard ER datasets. Table~\ref{tab:comprehensive_baselines} compares NARS with deep learning (Ditto, HierGAT), unsupervised (ZeroER), zero-shot (AnyMatch), and LLM-based (MatchGPT) methods.
+We evaluate NARS against several baselines on ICE-ID and standard ER datasets. Table~\ref{tab:comprehensive_baselines} compares NARS with deep learning (Ditto \cite{Li2020DeepEM}, HierGAT \cite{yao2022hiergat}), unsupervised (ZeroER \cite{wu2020zeroer}), zero-shot (AnyMatch \cite{zhang2024anymatch}), and LLM-based (MatchGPT) methods.
 
 \begin{table}[H]
   \centering
   \tiny
-  \caption{Comprehensive baseline comparison (F$_1$ scores) across ICE-ID and standard ER datasets. NARS results from \texttt{bench/benchmark\_results/nars\_full\_eval.csv}.}
+  \caption{Baseline comparison (F$_1$ scores) across ICE-ID and standard ER datasets. Each model uses its own evaluation pipeline (see provenance graph, Fig.~\ref{fig:nars_provenance_graph}); cross-model comparisons should be made with caution. MatchGPT was evaluated on 50 pairs per dataset. ZeroER has no ICE-ID result. Bold marks the best score among the evaluated runs shown in this table.}
   \label{tab:comprehensive_baselines}
   \begin{tabular}{lccccc}
     \toprule
     \textbf{Model} & \textbf{ICE-ID} & \textbf{Abt--Buy} & \textbf{Amazon--Google} & \textbf{DBLP--ACM} & \textbf{DBLP--Scholar} \\
     \midrule
-    NARS & \textbf{0.994} & \textbf{0.648} & \textbf{0.759} & \textbf{0.997} & \textbf{0.995} \\
-    Ditto & \textbf{1.000} & 0.525 & 0.732 & 0.970 & 0.940 \\
-    HierGAT & \textbf{1.000} & 0.333 & 0.203 & 0.326 & 0.347 \\
-    ZeroER & --- & 0.420 & 0.393 & \textbf{0.991} & 0.817 \\
-    AnyMatch & 0.907 & 0.400 & 0.625 & 0.947 & \textbf{0.970} \\
-    MatchGPT & 0.276 & 0.333 & 0.000 & 0.727 & 0.400 \\
-    Fellegi--Sunter & 0.950 & 0.194 & 0.185 & 0.304 & 0.314 \\
+    NARS & 0.994 & \textbf{0.648} & \textbf{0.759} & \textbf{0.997} & \textbf{0.995} \\
+    Ditto & \textbf{0.997} & 0.525 & 0.732 & 0.970 & 0.940 \\
+    Fellegi--Sunter & 0.994 & 0.126 & 0.351 & 0.961 & 0.776 \\
+    HierGAT & 0.857 & 0.000 & 0.000 & 0.810 & 0.468 \\
+    ZeroER & --- & 0.420 & 0.393 & 0.991 & 0.817 \\
+    AnyMatch & 0.907 & 0.400 & 0.625 & 0.947 & 0.970 \\
+    MatchGPT$^\dagger$ & 0.276 & 0.333 & 0.000 & 0.727 & 0.400 \\
     \bottomrule
+    \multicolumn{6}{l}{\scriptsize $^\dagger$ Evaluated on 50 pairs per dataset; high variance expected.}
   \end{tabular}
 \end{table}
 
-Across datasets, Ditto is strong but inconsistent on some benchmarks, ZeroER is highly competitive on citation matching without labels, and AnyMatch shows strong zero-shot transfer. Figure~\ref{fig:heatmap} provides a visual summary.
+Within the collected benchmark results, NARS attains the highest reported F$_1$ on four of five datasets (Abt--Buy, Amazon--Google, DBLP--ACM, and DBLP--Scholar), though cross-model comparisons remain sensitive to differences in preprocessing and evaluation pipelines. Ditto is the strongest neural matcher, achieving the best ICE-ID score (0.997) and competitive results on citation datasets. HierGAT achieves reasonable results on ICE-ID (0.857) and DBLP--ACM (0.810) but fails to learn on product-matching datasets (Abt--Buy, Amazon--Google), likely due to domain mismatch. ZeroER is competitive on citation matching without labels. AnyMatch shows consistent zero-shot transfer across all datasets. Fellegi--Sunter matches NARS on ICE-ID (0.994) but degrades substantially on two-table benchmarks where field semantics differ from its comparison rules. Figure~\ref{fig:heatmap} provides a visual summary.
 
 \begin{figure}[H]
   \centering
@@ -353,7 +379,7 @@ Across datasets, Ditto is strong but inconsistent on some benchmarks, ZeroER is 
   \label{fig:heatmap}
 \end{figure}
 
-Figure~\ref{fig:nars_rerun_f1} summarizes NARS performance across ICE-ID and the classic ER suite using the saved outputs (\texttt{benchmark\_results/nars\_full\_eval.csv}) and companion plot-data artifact (\texttt{paper\_artifacts/plot\_data/nars\_rerun\_f1.json}).
+Figure~\ref{fig:nars_rerun_f1} summarizes NARS performance across ICE-ID and the classic ER suite.
 
 \begin{figure}[H]
   \centering
@@ -363,12 +389,12 @@ Figure~\ref{fig:nars_rerun_f1} summarizes NARS performance across ICE-ID and the
 \end{figure}
 
 \subsection{Performance on Other Datasets}
-We also evaluated the performance of the NARS method against SOTA across standard two-table ER datasets (Abt–Buy, Amazon–Google, DBLP–ACM, DBLP–Scholar, iTunes–Amazon, Walmart–Amazon, Beer, Fodors–Zagats).
+We also evaluated the performance of the NARS method against SOTA across standard two-table ER datasets (Abt--Buy, Amazon--Google, DBLP--ACM, DBLP--Scholar, iTunes--Amazon, Walmart--Amazon, Beer, Fodors--Zagats).
 
 \begin{table}[H]
   \centering
   \tiny
-    \caption{NARS results across all datasets (see Tab.~\ref{tab:metric_definitions} for metric definitions). Beer and iTunes-Amazon have $<$20 test positives (9 and 16), yielding higher-variance metrics. Data from \texttt{bench/benchmark\_results/nars\_full\_eval.csv}.}
+    \caption{NARS results across all datasets (see Tab.~\ref{tab:metric_definitions} for metric definitions). Beer and iTunes--Amazon have $<$20 test positives (9 and 16), yielding higher-variance metrics.}
   \rowcolors{2}{gray!10}{white}
   \begin{tabular}{lcccccccccc}
     \toprule
@@ -398,10 +424,10 @@ We also evaluated the performance of the NARS method against SOTA across standar
     \toprule
     Dataset            & SOTA F$_1$ & NARS F$_1$ & $\Delta$F$_1$ \\
     \midrule
-    Abt--Buy            & 0.943  & 0.648 & --0.295 \\
-    Amazon--Google      & 0.793  & 0.759 & --0.034 \\
-    DBLP--ACM           & 0.990  & 0.997 & +0.007 \\
-    DBLP--Scholar       & 0.956  & 0.995 & +0.039 \\
+    Abt--Buy            & 0.943  & 0.648 & $-0.295$ \\
+    Amazon--Google      & 0.793  & 0.759 & $-0.034$ \\
+    DBLP--ACM           & 0.990  & 0.997 & $+0.007$ \\
+    DBLP--Scholar       & 0.956  & 0.995 & $+0.039$ \\
     \bottomrule
   \end{tabular}
 
@@ -411,33 +437,33 @@ We also evaluated the performance of the NARS method against SOTA across standar
 With the benchmark-specific preprocessing described in the appendix, NARS matches or exceeds reported SOTA on DBLP--ACM and DBLP--Scholar, while remaining slightly below SOTA on Abt--Buy and Amazon--Google.
 
 
-Table~\ref{tab:nars_horizontal} reports NARS pairwise performance on ICE-ID and standard two-table ER datasets (see \texttt{bench/benchmark\_results/nars\_full\_eval.csv}). For two-table benchmarks, we report pairwise metrics but omit clustering metrics (ARI-CC, ARI-AG) as these are pair-labeled classification tasks rather than deduplication-by-clustering. Ranking and clustering metrics are evaluated on ICE-ID using an explicit candidate graph (Table~\ref{tab:nars_graph_eval}).
+Table~\ref{tab:nars_horizontal} reports NARS pairwise performance on ICE-ID and standard two-table ER datasets. For two-table benchmarks, ARI values are computed on induced clusters from thresholded pair graphs; they are included for comparability but should be interpreted more cautiously than pairwise F$_1$/AUC. The deployment-faithful graph view for ICE-ID is reported separately in Table~\ref{tab:nars_graph_eval}.
 
 \subsection{Ablation Study: Judgment Type Contributions}
 \label{sec:ablations}
 
-To understand which judgment types contribute most to NARS's performance, we conducted ablation experiments removing each category of judgments from the pattern pool.
+To understand which judgment types contribute most to NARS's performance, we conducted ablation experiments removing each category of judgments from the LLR-based scoring pipeline. These ablations use the same evaluation protocol as the primary benchmark (Table~\ref{tab:nars_horizontal}): identical pair sampling, train/validation/test splits, and threshold calibration, so absolute F$_1$ values are directly comparable.
 
 \begin{table}[H]
   \centering
   \small
-  \caption{NARS ablation results on ICE-ID. Each row removes one judgment category.}
+  \caption{NARS ablation on ICE-ID (same protocol as primary benchmark). Each row removes one judgment category. $\Delta$F$_1$ is relative to the full model.}
   \label{tab:ablations}
   \begin{tabular}{lccc}
     \toprule
     \textbf{Ablation} & \textbf{F$_1$} & \textbf{$\Delta$F$_1$} & \textbf{AUC} \\
     \midrule
-    Full model & 0.686 & --- & 0.555 \\
-    $-$ Sex judgments & 0.155 & $-$0.531 & 0.102 \\
-    $-$ Census year (heimild) & 0.414 & $-$0.271 & 0.393 \\
-    $-$ Name judgments & 0.472 & $-$0.213 & 0.543 \\
-    $-$ Birthyear judgments & 0.543 & $-$0.143 & 0.496 \\
-    $-$ Geographic judgments & 0.682 & $-$0.003 & 0.535 \\
+    Full model & 0.994 & --- & 0.998 \\
+    $-$ Name judgments & 0.916 & $-$0.078 & 0.996 \\
+    $-$ Geographic judgments & 0.990 & $-$0.004 & 0.998 \\
+    $-$ Birthyear judgments & 0.994 & $<$0.001 & 0.998 \\
+    $-$ Sex judgments & 0.994 & 0.000 & 0.999 \\
+    $-$ Census year (heimild) & 0.994 & 0.000 & 0.998 \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-\textbf{Key Findings:} Surprisingly, sex judgments contribute the most ($\Delta$F$_1 = -0.531$), followed by census year ($-0.271$) and name ($-0.213$) judgments. Geographic judgments provide marginal improvement ($-0.003$), suggesting location alone is insufficient for disambiguation given Icelandic migration patterns. The large impact of sex judgments indicates that gender is a strong discriminator in this dataset. Figure~\ref{fig:ablation} visualizes these results.
+\textbf{Key Findings:} Name judgments are the most informative feature category ($\Delta$F$_1 = -0.078$), primarily by reducing recall from 0.992 to 0.859 when removed. Geographic judgments have a small but measurable effect ($\Delta$F$_1 = -0.004$). The remaining categories---birthyear, sex, and census year---show negligible individual impact, indicating substantial redundancy among features. The high baseline performance (F$_1$=0.994) means the model is already near ceiling, which compresses ablation deltas; the relative ordering of feature importance is more informative than the absolute magnitudes. Figure~\ref{fig:ablation} visualizes these results.
 
 \begin{figure}[H]
   \centering
@@ -446,16 +472,16 @@ To understand which judgment types contribute most to NARS's performance, we con
   \label{fig:ablation}
 \end{figure}
 
-\subsection{Failure Analysis}
-\label{sec:failure_analysis}
-
-We recommend reporting error slices (e.g., common patronymic collisions, missing kinship, and geographic ambiguity) as part of future work, alongside per-dataset diagnostics.
-
 %%%%%%%%%%%%%%%%%%%%%%%%%% DISCUSSION %%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 \section{Discussion \& Conclusion}\label{sec:Discussion_Conclusion}
-NARS, by contrast, leverages Non-Axiomatic Logic to learn from sparse, atomic judgments without large labeled sets or GPU resources, matching ensemble accuracy while degrading more gracefully under temporal drift. This underscores the value of neuro-symbolic approaches for robustness in non-stationary, low-resource settings. Our calibrated-threshold NARS pipeline (median midpoint on ICE-ID, validation F$_1$ on classic ER) shows that a purely symbolic, experience-based reasoner can rival—and in some cases surpass—state-of-the-art ML ensembles on entity resolution, particularly when downstream cluster coherence and temporal robustness matter. By calibrating a threshold on labeled pairs, NARS avoids trivial all-positive/all-negative solutions and yields stable binary decisions across datasets and time periods. Its transitivity-driven ARI gains further suggest that neuro-symbolic patterns capture inherent cluster structure, a property that pairwise neural scores must explicitly enforce. These findings underscore the promise of hybrid ER pipelines that integrate symbolic calibration and clustering priors with modern machine learning systems.
 
-In conclusion, NARS demonstrates competitive accuracy and superior robustness to temporal drift, illustrating the promise of symbolic reasoning under resource constraints.
+Our calibrated-threshold NARS pipeline (median midpoint on ICE-ID, validation F$_1$ on classic ER) suggests that a purely symbolic, evidence-based reasoner can achieve competitive pairwise accuracy on entity resolution without deep representation learning or GPU resources. On the balanced pairwise benchmark, NARS achieves F$_1$=0.994 on ICE-ID---matching Fellegi--Sunter and trailing Ditto (0.997, under a separate evaluation pipeline) by a slim margin---while, within the collected benchmark runs, recording the highest F$_1$ on four of five cross-dataset evaluations, and matching or exceeding reported SOTA on DBLP--ACM and DBLP--Scholar. Fellegi--Sunter matches NARS on ICE-ID (0.994) but degrades on two-table benchmarks (e.g., 0.126 on Abt--Buy vs.\ NARS's 0.648), which highlights the value of NARS's domain-adaptive preprocessing: dataset-specific judgments enable NARS to transfer across different ER schemas, while classical methods remain tied to ICE-ID's well-structured fields.
+
+Our results also reveal important limitations. The candidate-graph evaluation (Table~\ref{tab:nars_graph_eval}) shows that NARS's \emph{score ranking} is excellent (AUC=1.000, P@k=R@k=0.961), but converting scores to hard decisions on a realistic graph (pos rate $\approx$1.3\%) remains challenging: threshold-dependent F$_1$ drops to 0.473 and connected-component clustering over-merges (B$^3$ precision=0.218). This gap between ranking quality and hard-decision quality is a known challenge in entity resolution \cite{Christen2012ASO} and motivates future work on graph-aware post-processing (e.g., correlation clustering or hierarchical thresholding). Future work should also report error slices (e.g., common patronymic collisions, missing kinship, geographic ambiguity) as part of per-dataset failure diagnostics.
+
+The ablation results (Table~\ref{tab:ablations}) show that name judgments are by far the most informative feature category ($\Delta$F$_1$=$-$0.078), while geographic judgments have a small effect and the remaining categories (birthyear, sex, census year) show negligible individual impact at the high baseline F$_1$=0.994. The substantial redundancy among non-name features suggests that the model relies primarily on name matching, with other features serving as tiebreakers.
+
+In conclusion, NARS demonstrates that symbolic reasoning can serve as a transparent, competitive baseline for entity resolution. Its interpretable judgment patterns and low resource requirements make it a useful complement to neural matchers in hybrid ER pipelines.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%% REFERENCES %%%%%%%%%%%%%%%%%%%%%%%%%% 
 \bibliographystyle{plainnat}
@@ -466,6 +492,73 @@ In conclusion, NARS demonstrates competitive accuracy and superior robustness to
 \appendix
 
 \section{Appendix / supplemental material}
+
+\subsection{Artifact Provenance Graph}
+
+\begin{figure}[H]
+  \centering
+  \resizebox{\linewidth}{!}{%
+  \begin{tikzpicture}[
+    node distance=10mm and 12mm,
+    >=Latex,
+    box/.style={draw, rounded corners, align=left, font=\small, inner sep=4pt, text width=5.5cm},
+    title/.style={font=\bfseries\small}
+  ]
+    \node[title] (c1) at (0, 4.0) {Data Sources};
+    \node[title] (c2) at (7.5, 4.0) {Experiment Scripts};
+    \node[title] (c3) at (15.5, 4.0) {Result CSVs / Artifacts};
+    \node[title] (c4) at (23.0, 4.0) {Paper Outputs};
+
+    % Column 1: Data Sources
+    \node[box, text width=5cm] (d1) at (0, 2.5) {\texttt{raw\_data/people.csv}\\\texttt{bench/deepmatcher\_data/*}};
+    \node[box, text width=5cm] (d2) at (0, 0.5) {Baseline result CSVs\\(\texttt{ditto\_results}, \texttt{hiergat\_results},\\\texttt{zeroer\_results}, \texttt{anymatch\_results},\\\texttt{external\_models\_results},\\\texttt{all\_results}, \texttt{missing\_results})};
+
+    % Column 2: Scripts
+    \node[box, text width=6cm] (s1) at (7.5, 3.2) {\texttt{run\_nars\_full\_eval.py}\\(NARS pairwise benchmark)};
+    \node[box, text width=6cm] (s2) at (7.5, 1.6) {\texttt{run\_nars\_ablations.py}\\(ablation study, same protocol)};
+    \node[box, text width=6cm] (s3) at (7.5, 0.0) {\texttt{run\_baseline\_eval.py}\\(FS/Rules on ICE-ID + classic ER)};
+    \node[box, text width=6cm] (s4) at (7.5, -1.6) {\texttt{run\_experiments.py}\\(graph eval, calibration)};
+    \node[box, text width=6cm] (s5) at (7.5, -3.2) {\texttt{generate\_paper\_artifacts.py}\\(figures from CSVs)};
+    \node[box, text width=6cm] (s6) at (7.5, -4.8) {Ditto / HierGAT training\\(\texttt{external/ditto/}, \texttt{external/wdcproducts/})};
+
+    % Column 3: Artifacts
+    \node[box, text width=6.5cm] (a1) at (15.5, 3.2) {\texttt{nars\_full\_eval.csv}\\$\rightarrow$ Tab.~\ref{tab:nars_horizontal}, \ref{tab:comprehensive_baselines}, \ref{tab:iceid_results}};
+    \node[box, text width=6.5cm] (a2) at (15.5, 1.6) {\texttt{nars\_ablations\_consistent.csv}\\$\rightarrow$ Tab.~\ref{tab:ablations}, Fig.~\ref{fig:ablation}};
+    \node[box, text width=6.5cm] (a3) at (15.5, 0.0) {\texttt{baseline\_eval.csv}\\$\rightarrow$ Tab.~\ref{tab:iceid_results}, \ref{tab:comprehensive_baselines}};
+    \node[box, text width=6.5cm] (a4) at (15.5, -1.6) {\texttt{nars\_graph\_eval.csv},\\\texttt{nars\_calibration\_sensitivity.csv}\\$\rightarrow$ Tab.~\ref{tab:nars_graph_eval}, \ref{tab:calibration_sensitivity}};
+    \node[box, text width=6.5cm] (a5) at (15.5, -3.2) {\texttt{ditto\_results.csv},\\\texttt{hiergat} models, \texttt{anymatch\_results},\\\texttt{zeroer\_results}, \texttt{external\_models\_results}\\$\rightarrow$ Tab.~\ref{tab:comprehensive_baselines}, \ref{tab:iceid_results}};
+    \node[box, text width=6.5cm] (a6) at (15.5, -4.8) {\texttt{papers/figures/}\\(\texttt{nars\_rerun\_f1.pdf},\\\texttt{calibration\_sensitivity.png},\\\texttt{ablation\_chart.png}, \texttt{cross\_dataset\_heatmap.png})};
+
+    % Column 4: Outputs
+    \node[box, text width=5.5cm] (p1) at (23.0, 1.0) {Tables~\ref{tab:iceid_results}, \ref{tab:comprehensive_baselines}, \ref{tab:nars_horizontal}, \ref{tab:sota_horizontal}, \ref{tab:ablations}, \ref{tab:nars_graph_eval}, \ref{tab:calibration_sensitivity}};
+    \node[box, text width=5.5cm] (p2) at (23.0, -2.0) {Figures~\ref{fig:nars_rerun_f1}, \ref{fig:ablation}, \ref{fig:calibration}, \ref{fig:heatmap}};
+
+    % Connections
+    \draw[->] (d1) -- (s1);
+    \draw[->] (d1) -- (s2);
+    \draw[->] (d1) -- (s3);
+    \draw[->] (d1) -- (s4);
+    \draw[->] (d1) -- (s6);
+    \draw[->] (s1) -- (a1);
+    \draw[->] (s2) -- (a2);
+    \draw[->] (s3) -- (a3);
+    \draw[->] (s4) -- (a4);
+    \draw[->] (s5) -- (a6);
+    \draw[->] (s6) -- (a5);
+    \draw[->] (a1) -- (s5);
+    \draw[->] (a1) -- (p1);
+    \draw[->] (a2) -- (p1);
+    \draw[->] (a2) -- (p2);
+    \draw[->] (a3) -- (p1);
+    \draw[->] (a4) -- (p1);
+    \draw[->] (a5) -- (p1);
+    \draw[->] (a6) -- (p2);
+    \draw[->] (d2) -- (p1);
+  \end{tikzpicture}%
+  }
+  \caption{Provenance graph mapping data sources, scripts, result artifacts, and paper tables/figures. NARS, Fellegi--Sunter, and Rules results are produced by dedicated evaluation scripts; Ditto and HierGAT ICE-ID results come from direct training; other baseline results are from pre-computed CSVs.}
+  \label{fig:nars_provenance_graph}
+\end{figure}
 
 \subsection{Metrics}
 \begin{table}[H]
@@ -518,65 +611,70 @@ Numeric fields are parsed by extracting the first numeric token. We emit \texttt
 
 \textbf{Dataset-specific judgments.}
 \begin{itemize}
-  \item \textbf{Abt-Buy:} \texttt{name}, \texttt{description} (text), \texttt{price} (numeric; abs $\le$ 1.0 or rel $\le$ 0.05).
-  \item \textbf{Amazon-Google:} \texttt{title}, \texttt{manufacturer} (text), \texttt{price} (numeric; abs $\le$ 1.0 or rel $\le$ 0.05).
-  \item \textbf{DBLP-ACM / DBLP-Scholar:} \texttt{title}, \texttt{authors}, \texttt{venue} (text), \texttt{year} (same/close/far).
-  \item \textbf{iTunes-Amazon:} \texttt{Song\_Name}, \texttt{Artist\_Name}, \texttt{Album\_Name}, \texttt{Genre} (text), \texttt{Price} (numeric; abs $\le$ 0.5 or rel $\le$ 0.05), \texttt{Time} (time), \texttt{Released} and \texttt{CopyRight} (year).
-  \item \textbf{Walmart-Amazon:} \texttt{title}, \texttt{category}, \texttt{brand}, \texttt{modelno} (text), \texttt{price} (numeric; abs $\le$ 1.0 or rel $\le$ 0.05).
+  \item \textbf{Abt--Buy:} \texttt{name}, \texttt{description} (text), \texttt{price} (numeric; abs $\le$ 1.0 or rel $\le$ 0.05).
+  \item \textbf{Amazon--Google:} \texttt{title}, \texttt{manufacturer} (text), \texttt{price} (numeric; abs $\le$ 1.0 or rel $\le$ 0.05).
+  \item \textbf{DBLP--ACM / DBLP--Scholar:} \texttt{title}, \texttt{authors}, \texttt{venue} (text), \texttt{year} (same/close/far).
+  \item \textbf{iTunes--Amazon:} \texttt{Song\_Name}, \texttt{Artist\_Name}, \texttt{Album\_Name}, \texttt{Genre} (text), \texttt{Price} (numeric; abs $\le$ 0.5 or rel $\le$ 0.05), \texttt{Time} (time), \texttt{Released} and \texttt{CopyRight} (year).
+  \item \textbf{Walmart--Amazon:} \texttt{title}, \texttt{category}, \texttt{brand}, \texttt{modelno} (text), \texttt{price} (numeric; abs $\le$ 1.0 or rel $\le$ 0.05).
   \item \textbf{Beer:} \texttt{Beer\_Name}, \texttt{Brew\_Factory\_Name}, \texttt{Style} (text), \texttt{ABV} (numeric; abs $\le$ 0.3 or rel $\le$ 0.05).
-  \item \textbf{Fodors-Zagats:} \texttt{name}, \texttt{addr}, \texttt{city}, \texttt{type}, \texttt{class} (text), plus phone and address-number judgments.
+  \item \textbf{Fodors--Zagats:} \texttt{name}, \texttt{addr}, \texttt{city}, \texttt{type}, \texttt{class} (text), plus phone and address-number judgments.
 \end{itemize}
 
 \textbf{Data alignment for DeepMatcher splits.} For these benchmarks, pair IDs correspond to the source tables (e.g., \texttt{abt.csv}/\texttt{buy.csv}, \texttt{amazon.csv}/\texttt{google.csv}), so we align record IDs to the pair indices before applying the standard right-table offset to make IDs globally unique. This ensures that all training and evaluation pairs map to actual records.
 
-\textbf{Thresholding.} ICE-ID uses the original median-based separation of positive/negative validation scores. For classic ER benchmarks, we select a per-dataset threshold that maximizes validation F1 to accommodate extreme class imbalance.
+\textbf{Thresholding.} ICE-ID uses the original median-based separation of positive/negative validation scores. For classic ER benchmarks, we select a per-dataset threshold that maximizes validation F$_1$ to accommodate extreme class imbalance.
 
 \subsection{NARS Background}
-NARS uses channels to transform external information into Narsese (the knowledge in NARS), in which channels can process information in any modalities and granularities, such as strings for natural language sentences and matrices for visual signals, under the same principle, that is, through the compounding of the input (e.g., a compound of some words in a sentence, or some pixels in an image. In the problem discussed here, we need channels to process census records.
+\label{subsec:nars_background}
+NARS uses \emph{channels} to transform external information into Narsese (its internal knowledge representation). A channel can process information of any modality---strings for natural language, matrices for visual signals---under a single principle: compounding atomic inputs (e.g., words in a sentence or pixels in an image) into structured terms. For the problem discussed here, channels process census records.
 
-The compounding is not done by brute force enumeration but needs the memory of NARS for attention allocation. However, when only census data are provided, NARS does not know the semantics of the corresponding concepts (e.g., farm locations); thus, additional preprocessing of raw census records is required. The good news is that, on the other hand, this paper also proposes the possibilities of providing a spatial and temporal relationship of individuals in future research, so that NARS can ground the semantics of the input with the additional geographical and historical factors, thereby allowing more flexible input.
+Compounding is guided by NARS's memory-based attention allocation rather than brute-force enumeration. However, when only census data are provided, NARS lacks the semantics of domain concepts (e.g., farm locations), so additional preprocessing of raw records is required. Future work could supply spatial and temporal relationships directly, allowing NARS to ground input semantics through geographical and historical context.
 
 In summary, our approach adapts the compound generation method from NARS channels and the truth-value calculus to entity resolution, while omitting memory management and goal-driven inference components. This focused adaptation enables direct comparison with standard ML baselines on ER benchmarks.
 
 \subsubsection{Channel}
 
-There is a short-term cache in the NARS channel, which records the inputs in recent moments, each of which consists of multiple pieces of atomic sensation. Channel constructs two types of compounds based on the cache, one is spatial compound, which is used to describe what information in a single moment can be viewed as a whole; the other is temporal compound, which is used to describe the implication relationship of spatial compounds, as to predict the other compounds. In the problem in this paper, there is no short-term relationship in the census records, so we will only use spatial compounds.
-Compared with using the combination of atomic sensation, the channel is more inclined to form a whole and then discuss which part can be eliminated. The details will be described in the following chapters.
+The NARS channel maintains a short-term cache of recent inputs, each consisting of multiple atomic sensations. From this cache the channel constructs two types of compounds: \emph{spatial compounds}, which group co-occurring sensations into a single moment, and \emph{temporal compounds}, which capture implication relationships between spatial compounds for prediction. Because census records lack short-term sequential structure, we use only spatial compounds.
+Rather than enumerating all combinations of atomic sensations, the channel forms a compound as a whole and then determines which parts can be eliminated.
 
 \subsubsection{Truth-Value}
 
-In NARS, the truth-value of a judgment discusses the positive evidence as well as negative evidence. Assuming that a judgment has $w_+$ units of positive evidence and $w_-$ units of negative evidence, the truth-value ($f$, $c$) is: $f=w_+/(w_++w_-), c=(w_++w_-)/( w_++w_-+k)$. Where $f$ (from 0 to 1, meaning the frequency) represents the proportion of positive evidence to all evidence. The larger the $f$, the more true the judgment and vice versa. $c$ (from 0 to 1, meaning the confidence) represents the proportion of the existing evidence to the amount of evidence after expanding $k$ unknown new evidence, where $k$ is a constant. The higher the $c$, the smaller the changes on $f$ considering some future evidence, thus the more reliable the $f$.
+In NARS, the truth-value of a judgment quantifies both positive and negative evidence. Given $w_+$ units of positive evidence and $w_-$ units of negative evidence, the truth-value $(f, c)$ is defined as $f=w_+/(w_++w_-)$ and $c=(w_++w_-)/(w_++w_-+k)$, where $f \in [0,1]$ (the \emph{frequency}) is the proportion of positive evidence and $c \in [0,1]$ (the \emph{confidence}) measures how much existing evidence there is relative to $k$ hypothetical future observations. Higher $f$ indicates stronger positive support; higher $c$ indicates that $f$ is less likely to change with new evidence.
 
 \subsubsection{The Expectation of Truth-Values}
 
-Considering that the truth-value is a 2D evaluator, there is a unified evaluation called expectation ($e = c(f-0.5) + 0.5, e\in [0,1]$). The closer $e$ is to 1, the more true the judgment is and the more reliable. The closer $e$ is to 0, the more false the judgement is and the more reliable. When $e$ is close to 0.5, either the truth-value of the judgment is close to 0.5 (not true and not false, which means ignorant), or the judgment itself is not reliable enough.
+Because the truth-value is two-dimensional, NARS defines a scalar summary called \emph{expectation}: $e = c(f-0.5) + 0.5$, with $e\in [0,1]$. Values of $e$ near 1 indicate a judgment that is both true and reliable; values near 0 indicate a judgment that is both false and reliable. When $e \approx 0.5$, the system is either ignorant ($f \approx 0.5$) or lacks sufficient evidence ($c$ is low).
 
 \subsubsection{The Revision of Truth-Values}
 
-When there are truth-values of the same judgment from independent resources, NARS integrates them through the following revision rule: $w_+=w_+^{(1)}+w_+^{(2)}, w_-=w_-^{(1)}+w_-^{(2)}$. $f$ and $c$ are calculated using the above formula.
+When two independent sources provide truth-values for the same judgment, NARS integrates them via \emph{revision}: $w_+=w_+^{(1)}+w_+^{(2)}$, $w_-=w_-^{(1)}+w_-^{(2)}$, with $f$ and $c$ recomputed from the pooled evidence counts.
 
-\subsubsection{Initial Hyperparameter Tunning} Before the experiemnt proper, we use part of the census records from 1899 and earlier as the training data, and the data after that as the testing data. We first sort the census records by individuals, so that records from the same person are arranged together. When using a row of data, we select $m$ more rows after this row to form $m$ pairs. Among these $m$ pairs, some of them are from the same person, which contribute to the positive pattern, and some are from different people, which contribute to the negative pattern.
+\subsubsection{Pilot Hyperparameter Tuning}
 
-In testing, we randomly select $x$ individuals in the testing data and use all their related census records to calculate the match score of the records two by two. In classification, we will choose a threshold from 0 to 0.5 and consider that pairs with score > 0.5 + threshold are from the same person, and pairs with score < 0.5 – threshold are from different people, then calculate F1 based on this. The larger the threshold, the more reliable the classification. We discuss the impact of the amount of training data used, the number of patterns used, and the size of the train scope on F1. By default, we use 1/10000 of the training data to train and $x=1000$ for the testing data to test. The default $m$ is 5. The default number of patterns used is 10.
+\emph{Note: this subsection describes an early pilot procedure used to select NARS hyperparameters before the final benchmark protocol (Section~\ref{sec:methods}) was fixed.}
 
-We found that increasing the number of reference patterns used for recognition improves reliability, while varying the training proportion and observation scope has less consistent effects.
+Census records up to 1899 served as training data and records after 1899 as test data. Records were sorted by individual so that records from the same person appeared consecutively. For each record, $m$ subsequent rows were paired with it, yielding both positive pairs (same person) and negative pairs (different persons).
 
-\textbf{Handcrafted Rules}: Following the rule-based method, the input of NARS is the summarization of the similarities and differences between two census records. While processing two rows, the following atomic judgments according to different indices will be generated:
+At test time, $x$ individuals were sampled from the test set and all pairwise match scores among their records were computed. A symmetric threshold $\delta$ around 0.5 was swept: pairs with score $> 0.5 + \delta$ were predicted as matches and pairs with score $< 0.5 - \delta$ as non-matches, and F$_1$ was computed for each $\delta$. Default settings: $1/10{,}000$ of training data, $x=1{,}000$ test individuals, $m=5$ neighbor rows, and 10 reference patterns.
 
-\textit{\textbf{Heimild}}: Based on the census year, generate the judgment of “differ in $x$ years”, where $x$ is the absolute value of the difference in heimild in the two rows.
+Increasing the number of reference patterns improved reliability, while varying the training proportion and observation scope had less consistent effects.
 
-\textit{\textbf{nafn$\_$norm}}: Generate the judgment of “different/same name” based on whether the names are the same. The same applies to \textbf{\textit{first$\_$name}}, \textbf{\textit{patronym}}, and \textbf{\textit{surname}}.
+\textbf{Handcrafted Rules (pilot-era rule set).} The following field-level judgments were used in early pilot experiments. The final benchmark uses the extended judgment vocabulary described in Section~\ref{sec:methods} (which adds graded birthyear thresholds, geographic hierarchy levels, and temporal gap judgments). When processing a record pair, the pilot rules generate:
 
-\textit{\textbf{Birthyear}}: Generate the judgment of “different/same birth year” based on whether the birth dates are the same.
+\textit{\textbf{Heimild}}: Emits \texttt{differ\_in\_X\_years}, where $X$ is the absolute difference in census year between the two records.
 
-\textit{\textbf{Sex}}: Generate the judgment of “different/same gender ”based on whether the genders are the same.
+\textit{\textbf{nafn\_norm}}: Emits \texttt{same\_nafn\_norm} or \texttt{different\_nafn\_norm} based on whether the normalized full names match. The same logic applies to \textbf{\textit{first\_name}}, \textbf{\textit{patronym}}, and \textbf{\textit{surname}}.
 
-\textit{\textbf{Status}}: It is not enough to only discuss whether the social relations of individuals are the same or not, so two judgments are generated here, namely “the social status is $x$” and “the social status is $y$”, where $x$ and $y$ represent the Status in the two rows of data, in no particular order.
+\textit{\textbf{Birthyear}}: Emits \texttt{same\_birthyear} or \texttt{different\_birthyear} based on whether the birth years match.
 
-\textit{\textbf{Marriagestatus}}: Generate the judgment of “different/same marriage status” based on whether the marital status is the same.
+\textit{\textbf{Sex}}: Emits \texttt{same\_sex} or \texttt{different\_sex} based on whether the sex values match.
 
-\textit{\textbf{Farm}}: Generates “different/same farm” judgment based on whether the farm id is the same. The same applies to \textit{\textbf{county}}, \textit{\textbf{parish}}, and \textit{\textbf{district}}.
+\textit{\textbf{Status}}: Because social status is categorical rather than binary, two judgments are emitted: \texttt{status\_is\_X} and \texttt{status\_is\_Y}, where $X$ and $Y$ are the status values from each record (unordered).
 
-\textit{\textbf{Label}}: Determines whether the two pieces of data are from the same individual based on whether the person is the same.
+\textit{\textbf{Marriagestatus}}: Emits \texttt{same\_marriagestatus} or \texttt{different\_marriagestatus} based on whether the marital status values match.
+
+\textit{\textbf{Farm}}: Emits \texttt{same\_farm} or \texttt{different\_farm} based on whether the farm IDs match. The same logic applies to \textit{\textbf{county}}, \textit{\textbf{parish}}, and \textit{\textbf{district}}.
+
+\textit{\textbf{Label}}: The ground-truth indicator: records are from the same individual if and only if they share the same \texttt{person} ID.
 
 \end{document}

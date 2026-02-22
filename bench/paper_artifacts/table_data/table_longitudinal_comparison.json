@@ -1,0 +1,102 @@
+[
+  {
+    "dataset": "ICE-ID",
+    "time_span": "1703-1920",
+    "temporal_signal": "Census year",
+    "n_entities": "227K persons",
+    "entity_type": "Person",
+    "temporal_coverage": "16 waves",
+    "file_derived": "Yes",
+    "access": "Open"
+  },
+  {
+    "dataset": "IPUMS LRS",
+    "time_span": "1850-1940",
+    "temporal_signal": "Census year",
+    "n_entities": "~50M",
+    "entity_type": "Person",
+    "temporal_coverage": "10 waves",
+    "file_derived": "No (doc)",
+    "access": "Account"
+  },
+  {
+    "dataset": "IPUMS MLP",
+    "time_span": "1870-2020",
+    "temporal_signal": "Census + survey",
+    "n_entities": "~100M",
+    "entity_type": "Person",
+    "temporal_coverage": "Continuous",
+    "file_derived": "No (doc)",
+    "access": "Account"
+  },
+  {
+    "dataset": "IPUMS NAPP",
+    "time_span": "1801-1910",
+    "temporal_signal": "Census year",
+    "n_entities": "~100M",
+    "entity_type": "Person",
+    "temporal_coverage": "Multi-country",
+    "file_derived": "No (doc)",
+    "access": "Account"
+  },
+  {
+    "dataset": "ORCID",
+    "time_span": "2012-present",
+    "temporal_signal": "Last modified",
+    "n_entities": "~18M",
+    "entity_type": "Researcher",
+    "temporal_coverage": "Continuous",
+    "file_derived": "Yes (sample)",
+    "access": "Open"
+  },
+  {
+    "dataset": "SemParl",
+    "time_span": "1907-2021",
+    "temporal_signal": "Speech date",
+    "n_entities": "~7K persons",
+    "entity_type": "Parliamentarian",
+    "temporal_coverage": "Daily",
+    "file_derived": "Yes",
+    "access": "Open"
+  },
+  {
+    "dataset": "CKCC",
+    "time_span": "1600-1800",
+    "temporal_signal": "Letter date",
+    "n_entities": "~5K persons",
+    "entity_type": "Correspondent",
+    "temporal_coverage": "Sparse",
+    "file_derived": "Yes",
+    "access": "Open"
+  },
+  {
+    "dataset": "correspSearch",
+    "time_span": "1500-2000",
+    "temporal_signal": "Letter date",
+    "n_entities": "~130K letters",
+    "entity_type": "Correspondent",
+    "temporal_coverage": "Sparse",
+    "file_derived": "Yes",
+    "access": "Open"
+  },
+  {
+    "dataset": "Synthea",
+    "time_span": "1950-2020",
+    "temporal_signal": "Encounter date",
+    "n_entities": "~1K (sample)",
+    "entity_type": "Patient",
+    "temporal_coverage": "Daily",
+    "file_derived": "Yes",
+    "access": "Open"
+  },
+  {
+    "dataset": "FEBRL",
+    "time_span": "N/A",
+    "temporal_signal": "None",
+    "n_entities": "5K-10K",
+    "entity_type": "Patient",
+    "temporal_coverage": "Static",
+    "file_derived": "Yes",
+    "access": "Open"
+  }
+]

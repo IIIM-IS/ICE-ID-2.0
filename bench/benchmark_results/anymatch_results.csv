@@ -1,0 +1,10 @@
+model,dataset,f1,status
+anymatch,ICE-ID,0.9071,completed
+anymatch,Abt-Buy,0.40,completed
+anymatch,Amazon-Google,0.625,completed
+anymatch,Beer,0.8485,completed
+anymatch,DBLP-ACM,0.9474,completed
+anymatch,DBLP-Scholar,0.9697,completed
+anymatch,Fodors-Zagats,1.0,completed
+anymatch,iTunes-Amazon,0.4898,completed
+anymatch,Walmart-Amazon,0.6316,completed

@@ -1,0 +1,55 @@
+model,dataset,status,f1,precision,recall,time,n_pairs,error
+matchgpt,iceid,completed,0.2758620689655173,1.0,0.16,26.521323442459106,50.0,
+matchgpt,abt_buy,completed,0.3333333333333333,0.5,0.25,22.973203420639038,50.0,
+matchgpt,amazon_google,completed,0.0,0.0,0.0,22.034273386001587,50.0,
+matchgpt,dblp_acm,completed,0.7272727272727274,0.8888888888888888,0.6153846153846154,22.31294846534729,50.0,
+matchgpt,dblp_scholar,completed,0.4,1.0,0.25,27.141255140304565,50.0,
+matchgpt,walmart_amazon,completed,0.33333333333333337,1.0,0.2,22.426025867462158,50.0,
+matchgpt,beer,completed,0.4444444444444445,1.0,0.2857142857142857,23.57220697402954,50.0,
+matchgpt,fodors_zagats,completed,0.6666666666666666,1.0,0.5,23.43777346611023,50.0,
+matchgpt,itunes_amazon,completed,0.4347826086956522,0.5,0.38461538461538464,21.48981499671936,50.0,
+anymatch,iceid,failed,,,,,,"Some weights of GPT2ForSequenceClassification were not initialized from the model checkpoint at gpt2 and are newly initialized: ['score.weight']
+You should probably TRAIN this model on a down-stream t"
+anymatch,abt_buy,failed,,,,,,"Some weights of GPT2ForSequenceClassification were not initialized from the model checkpoint at gpt2 and are newly initialized: ['score.weight']
+You should probably TRAIN this model on a down-stream t"
+anymatch,amazon_google,failed,,,,,,"Some weights of GPT2ForSequenceClassification were not initialized from the model checkpoint at gpt2 and are newly initialized: ['score.weight']
+You should probably TRAIN this model on a down-stream t"
+anymatch,dblp_acm,failed,,,,,,"Some weights of GPT2ForSequenceClassification were not initialized from the model checkpoint at gpt2 and are newly initialized: ['score.weight']
+You should probably TRAIN this model on a down-stream t"
+anymatch,dblp_scholar,failed,,,,,,"Some weights of GPT2ForSequenceClassification were not initialized from the model checkpoint at gpt2 and are newly initialized: ['score.weight']
+You should probably TRAIN this model on a down-stream t"
+anymatch,walmart_amazon,failed,,,,,,"Some weights of GPT2ForSequenceClassification were not initialized from the model checkpoint at gpt2 and are newly initialized: ['score.weight']
+You should probably TRAIN this model on a down-stream t"
+anymatch,beer,failed,,,,,,"Some weights of GPT2ForSequenceClassification were not initialized from the model checkpoint at gpt2 and are newly initialized: ['score.weight']
+You should probably TRAIN this model on a down-stream t"
+anymatch,fodors_zagats,failed,,,,,,"Some weights of GPT2ForSequenceClassification were not initialized from the model checkpoint at gpt2 and are newly initialized: ['score.weight']
+You should probably TRAIN this model on a down-stream t"
+anymatch,itunes_amazon,failed,,,,,,"Some weights of GPT2ForSequenceClassification were not initialized from the model checkpoint at gpt2 and are newly initialized: ['score.weight']
+You should probably TRAIN this model on a down-stream t"
+hiergat,iceid,failed,,,,,,"Traceback (most recent call last):
+  File ""/home/potatosalad/Documents/projects/iceidfinaldeliverable/ICE-ID-2.0/bench/external/wdcproducts/hiergat/train.py"", line 17, in <module>
+    from transformer"
+hiergat,abt_buy,failed,,,,,,"Traceback (most recent call last):
+  File ""/home/potatosalad/Documents/projects/iceidfinaldeliverable/ICE-ID-2.0/bench/external/wdcproducts/hiergat/train.py"", line 17, in <module>
+    from transformer"
+hiergat,amazon_google,failed,,,,,,"Traceback (most recent call last):
+  File ""/home/potatosalad/Documents/projects/iceidfinaldeliverable/ICE-ID-2.0/bench/external/wdcproducts/hiergat/train.py"", line 17, in <module>
+    from transformer"
+hiergat,dblp_acm,failed,,,,,,"Traceback (most recent call last):
+  File ""/home/potatosalad/Documents/projects/iceidfinaldeliverable/ICE-ID-2.0/bench/external/wdcproducts/hiergat/train.py"", line 17, in <module>
+    from transformer"
+hiergat,dblp_scholar,failed,,,,,,"Traceback (most recent call last):
+  File ""/home/potatosalad/Documents/projects/iceidfinaldeliverable/ICE-ID-2.0/bench/external/wdcproducts/hiergat/train.py"", line 17, in <module>
+    from transformer"
+hiergat,walmart_amazon,failed,,,,,,"Traceback (most recent call last):
+  File ""/home/potatosalad/Documents/projects/iceidfinaldeliverable/ICE-ID-2.0/bench/external/wdcproducts/hiergat/train.py"", line 17, in <module>
+    from transformer"
+hiergat,beer,failed,,,,,,"Traceback (most recent call last):
+  File ""/home/potatosalad/Documents/projects/iceidfinaldeliverable/ICE-ID-2.0/bench/external/wdcproducts/hiergat/train.py"", line 17, in <module>
+    from transformer"
+hiergat,fodors_zagats,failed,,,,,,"Traceback (most recent call last):
+  File ""/home/potatosalad/Documents/projects/iceidfinaldeliverable/ICE-ID-2.0/bench/external/wdcproducts/hiergat/train.py"", line 17, in <module>
+    from transformer"
+hiergat,itunes_amazon,failed,,,,,,"Traceback (most recent call last):
+  File ""/home/potatosalad/Documents/projects/iceidfinaldeliverable/ICE-ID-2.0/bench/external/wdcproducts/hiergat/train.py"", line 17, in <module>
+    from transformer"
