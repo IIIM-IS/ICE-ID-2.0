@@ -6,11 +6,23 @@
 
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-<!-- [![NeurIPS 2026](https://img.shields.io/badge/NeurIPS-2026-orange)](https://neurips.cc/) -->
 
 Dataset + benchmark for Icelandic historical census data (1703–1920), DeepMatcher suites, multiple model families (symbolic → deep), and a Streamlit dashboard for exploration and evaluation.
 
 [Quick Start](#-quick-start) • [Data](#-data-sources) • [Benchmarking](#-benchmarking) • [Dashboard](#-dashboard) • [Docs](#-documentation) • [Citation](#-citation)
+
+</div>
+
+<div align="center">
+<h3>Screenshots</h3>
+
+<p><strong>Cluster Inspector</strong> — edge navigation, cluster summary, and member details</p>
+
+<img src="docs/images/dashboard_cluster_inspector.png" alt="Cluster Inspector" width="100%"/>
+
+<p><strong>Visual Analytics</strong> — match network and genealogical tree visualisations</p>
+
+<img src="docs/images/dashboard_visual_analytics.png" alt="Visual Analytics" width="100%"/>
 
 </div>
 
@@ -190,9 +202,7 @@ If you use ICE-ID, please cite:
   author={Hora de Carvalho, Gonçalo and Popov, Lazar S. and Kaatee, Sander and 
           Thórisson, Kristinn R. and Li, Tangrui and Björnsson, Pétur Húni and 
           Dibangoye, Jilles S.},
-  journal={Advances in Neural Information Processing Systems (NeurIPS)},
-  year={2026},
-  note={Datasets and Benchmarks Track}
+  year={2026}
 }
 ```
 
