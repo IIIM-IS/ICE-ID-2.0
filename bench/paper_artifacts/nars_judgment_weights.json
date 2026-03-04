@@ -1,0 +1,194 @@
+[
+  {
+    "judgment": "different_birthyear",
+    "weight": -5.0,
+    "match_count": 25,
+    "non_match_count": 16209,
+    "match_rate": 0.0028,
+    "non_match_rate": 0.909
+  },
+  {
+    "judgment": "different_first_name",
+    "weight": -5.0,
+    "match_count": 58,
+    "non_match_count": 17592,
+    "match_rate": 0.0065,
+    "non_match_rate": 0.9865
+  },
+  {
+    "judgment": "different_sex",
+    "weight": -5.0,
+    "match_count": 20,
+    "non_match_count": 8936,
+    "match_rate": 0.0022,
+    "non_match_rate": 0.5011
+  },
+  {
+    "judgment": "same_farm",
+    "weight": 5.0,
+    "match_count": 3732,
+    "non_match_count": 3,
+    "match_rate": 0.4187,
+    "non_match_rate": 0.0002
+  },
+  {
+    "judgment": "same_nafn_norm",
+    "weight": 5.0,
+    "match_count": 8655,
+    "non_match_count": 18,
+    "match_rate": 0.9711,
+    "non_match_rate": 0.001
+  },
+  {
+    "judgment": "same_parish",
+    "weight": 4.8162,
+    "match_count": 5740,
+    "non_match_count": 92,
+    "match_rate": 0.644,
+    "non_match_rate": 0.0052
+  },
+  {
+    "judgment": "same_county",
+    "weight": 4.5081,
+    "match_count": 6078,
+    "non_match_count": 133,
+    "match_rate": 0.6819,
+    "non_match_rate": 0.0075
+  },
+  {
+    "judgment": "different_patronym",
+    "weight": -4.374,
+    "match_count": 107,
+    "non_match_count": 17145,
+    "match_rate": 0.012,
+    "non_match_rate": 0.9615
+  },
+  {
+    "judgment": "same_first_name",
+    "weight": 4.2974,
+    "match_count": 8855,
+    "non_match_count": 240,
+    "match_rate": 0.9935,
+    "non_match_rate": 0.0135
+  },
+  {
+    "judgment": "same_birthyear",
+    "weight": 4.0996,
+    "match_count": 5155,
+    "non_match_count": 170,
+    "match_rate": 0.5784,
+    "non_match_rate": 0.0095
+  },
+  {
+    "judgment": "same_surname",
+    "weight": 4.0607,
+    "match_count": 28,
+    "non_match_count": 0,
+    "match_rate": 0.0031,
+    "non_match_rate": 0.0
+  },
+  {
+    "judgment": "same_patronym",
+    "weight": 3.7333,
+    "match_count": 8758,
+    "non_match_count": 418,
+    "match_rate": 0.9826,
+    "non_match_rate": 0.0234
+  },
+  {
+    "judgment": "different_nafn_norm",
+    "weight": -3.5376,
+    "match_count": 258,
+    "non_match_count": 17814,
+    "match_rate": 0.0289,
+    "non_match_rate": 0.999
+  },
+  {
+    "judgment": "same_district",
+    "weight": 2.7097,
+    "match_count": 7127,
+    "non_match_count": 948,
+    "match_rate": 0.7996,
+    "non_match_rate": 0.0532
+  },
+  {
+    "judgment": "birthyear_very_close",
+    "weight": 2.5161,
+    "match_count": 3675,
+    "non_match_count": 593,
+    "match_rate": 0.4123,
+    "non_match_rate": 0.0333
+  },
+  {
+    "judgment": "birthyear_close",
+    "weight": -2.0516,
+    "match_count": 54,
+    "non_match_count": 855,
+    "match_rate": 0.0061,
+    "non_match_rate": 0.0479
+  },
+  {
+    "judgment": "same_census",
+    "weight": -1.6363,
+    "match_count": 141,
+    "non_match_count": 1458,
+    "match_rate": 0.0158,
+    "non_match_rate": 0.0818
+  },
+  {
+    "judgment": "different_district",
+    "weight": -1.5525,
+    "match_count": 1786,
+    "non_match_count": 16884,
+    "match_rate": 0.2004,
+    "non_match_rate": 0.9468
+  },
+  {
+    "judgment": "different_county",
+    "weight": -1.1462,
+    "match_count": 2787,
+    "non_match_count": 17546,
+    "match_rate": 0.3127,
+    "non_match_rate": 0.984
+  },
+  {
+    "judgment": "different_parish",
+    "weight": -1.0298,
+    "match_count": 3151,
+    "non_match_count": 17658,
+    "match_rate": 0.3535,
+    "non_match_rate": 0.9902
+  },
+  {
+    "judgment": "adjacent_census",
+    "weight": 0.7917,
+    "match_count": 3970,
+    "non_match_count": 3598,
+    "match_rate": 0.4454,
+    "non_match_rate": 0.2018
+  },
+  {
+    "judgment": "same_sex",
+    "weight": 0.693,
+    "match_count": 8893,
+    "non_match_count": 8896,
+    "match_rate": 0.9978,
+    "non_match_rate": 0.4989
+  },
+  {
+    "judgment": "different_farm",
+    "weight": -0.543,
+    "match_count": 5169,
+    "non_match_count": 17799,
+    "match_rate": 0.5799,
+    "non_match_rate": 0.9981
+  },
+  {
+    "judgment": "distant_census",
+    "weight": -0.285,
+    "match_count": 4802,
+    "non_match_count": 12776,
+    "match_rate": 0.5388,
+    "non_match_rate": 0.7165
+  }
+]

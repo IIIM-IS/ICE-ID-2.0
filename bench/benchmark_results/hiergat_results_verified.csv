@@ -1,0 +1,6 @@
+model,dataset,status,f1,precision,recall,notes
+hiergat,iceid,completed,0.8571,0.7500,1.0000,RoBERTa bs=16 epochs=50 run_id=0
+hiergat,abt_buy,completed,0.0000,0.0000,0.0000,RoBERTa bs=16 epochs=20 run_id=0; never learned
+hiergat,amazon_google,completed,0.5769,0.5000,0.6818,RoBERTa bs=16 epochs=20 run_id=0; best at epoch 3
+hiergat,dblp_acm,completed,0.9398,0.8864,1.0000,RoBERTa bs=16 epochs=20 run_id=0; best at epoch 7
+hiergat,dblp_scholar,completed,0.9730,0.9474,1.0000,RoBERTa bs=16 epochs=20 run_id=0; best at epoch 14
