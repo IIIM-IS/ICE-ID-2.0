@@ -16,6 +16,7 @@ from typing import Dict, Iterable, List, Optional, Tuple
 
 import pandas as pd
 from pyvis.network import Network
+from .ds_io import family_record_index
 
 
 def build_cluster_network_edges(
@@ -77,7 +78,7 @@ def build_family_tree_edges(
     and partners up to a specified `depth_limit` and `node_limit`.
 
     Args:
-        members (Iterable[int]): The initial set of person IDs to start the traversal from.
+        members (Iterable[int]): Initial census source-record IDs.
         people_df (pd.DataFrame): The main people DataFrame containing relationship columns ('father', 'mother', 'partner').
         node_limit (int): The maximum number of people to include in the tree.
         depth_limit (int): The maximum number of relationship steps to traverse from the seeds.
@@ -87,73 +88,35 @@ def build_family_tree_edges(
             - A list of directed, labeled edges (source_id, target_id, relationship_type).
             - A list of all person IDs present in the final graph.
     """
-    id_index = people_df.set_index("id", drop=False)
-
-    seeds = [int(i) for i in members]
     from collections import deque
-    q = deque((s, 0) for s in seeds)
-    seen = set()
-    present: List[int] = []
-    edges: List[Tuple[int, int, str]] = []
+    limit=max(0,int(node_limit))
+    if not limit:return [],[]
+    index=family_record_index(people_df,people_df.attrs.get('source_signature',''))
+    seeds=[]
+    for member in members:
+        member=int(member)
+        if member in index['known'] and member not in seeds:seeds.append(member)
+        if len(seeds)>=limit:break
+    queue=deque((s,0) for s in seeds);scheduled=set(seeds);present=[];edges=[]
 
-    if not seeds:
-        return edges, present
+    def admit(node,depth):
+        if node in scheduled:return True
+        if node not in index['known'] or len(scheduled)>=limit:return False
+        scheduled.add(node);queue.append((node,depth));return True
 
-    while q and len(present) < node_limit:
-        node, d = q.popleft()
-        if node in seen:
-            continue
-        seen.add(node)
-        present.append(node)
-
-        if d >= depth_limit or node not in id_index.index:
-            continue
-
-        row = id_index.loc[node]
-
-        # Parents -> child (keep labels literally as in the data)
-        for rel in ("father", "mother"):
-            try:
-                pid = int(row[rel]) if pd.notna(row[rel]) else None
-            except Exception:
-                pid = None
-            if pid and pid in id_index.index:
-                edges.append((pid, node, rel))
-                if pid not in seen and len(present) < node_limit:
-                    q.append((pid, d + 1))
-
-        # node -> children (same literal labels)
-        for rel in ("father", "mother"):
-            try:
-                kids = people_df.loc[people_df[rel] == node, "id"].head(50).tolist()
-            except Exception:
-                kids = []
-            for kid in kids:
-                kid = int(kid)
-                edges.append((node, kid, rel))
-                if kid not in seen and len(present) < node_limit:
-                    q.append((kid, d + 1))
-
-        # Partner (bidirectional)
-        try:
-            partner = int(row["partner"]) if pd.notna(row["partner"]) else None
-        except Exception:
-            partner = None
-        if partner and partner in id_index.index:
-            edges.append((node, partner, "partner"))
-            edges.append((partner, node, "partner"))
-            if partner not in seen and len(present) < node_limit:
-                q.append((partner, d + 1))
-
-    # Dedup directed edges
-    seen_e = set()
-    dedup = []
-    for a, b, lbl in edges:
-        key = (int(a), int(b), str(lbl))
-        if key not in seen_e:
-            seen_e.add(key)
-            dedup.append((int(a), int(b), str(lbl)))
-    return dedup, present
+    while queue:
+        node,depth=queue.popleft();present.append(node)
+        if depth>=depth_limit:continue
+        for relation in ['father','mother']:
+            parent=index['parents'][relation].get(node)
+            if parent is not None and admit(parent,depth+1):edges.append((parent,node,relation))
+            for child in index['children'][relation].get(node,[]):
+                if admit(child,depth+1):edges.append((node,child,relation))
+        partners=list(index['partner_in'].get(node,[]))
+        if node in index['partner_out']:partners.append(index['partner_out'][node])
+        for partner in partners:
+            if admit(partner,depth+1):edges.extend([(node,partner,'partner'),(partner,node,'partner')])
+    return list(dict.fromkeys(edges)),present
 
 
 def build_pyvis_network_graph(
@@ -239,7 +202,7 @@ def build_pyvis_network_graph(
 
     for nid in nodes_to_render:
         if cluster_by and cluster_by != "Label Status":
-            if cluster_by == "Hand-Label (person)":
+            if cluster_by in ("Reference person", "Hand-Label (person)"):
                 gv = person_id_map.get(nid)
             elif cluster_by == "Parish":
                 gv = parish_map.get(nid)
@@ -383,9 +346,6 @@ def build_pyvis_family_tree(
     )
 
     present_set = set(present)
-    for seed in seed_list:
-        if seed not in present_set:
-            present_set.add(seed)
 
     sub_people = people_df.loc[people_df["id"].isin(present_set)]
     labels: Dict[int, str] = {}
@@ -419,7 +379,7 @@ def build_pyvis_family_tree(
 
     for nid in present_set:
         if cluster_by and cluster_by != "Label Status":
-            if cluster_by == "Hand-Label (person)":
+            if cluster_by in ("Reference person", "Hand-Label (person)"):
                 gv = person_id_map.get(nid)
             elif cluster_by == "Parish":
                 gv = parish_map.get(nid)
@@ -464,6 +424,7 @@ def build_pyvis_family_tree(
     
     # Deduplicate ALL edges (directed): avoid double-thick lines
     edge_seen = set()  # (a,b,lbl)
+    relationship_index=family_record_index(people_df,people_df.attrs.get('source_signature',''))['records']
     color_map = {"father": "#66c2a5", "mother": "#fc8d62", "partner": "#8da0cb"}
     for a, b, lbl in fam_edges_raw:
         if a not in present_set or b not in present_set:
@@ -472,9 +433,16 @@ def build_pyvis_family_tree(
         if key in edge_seen:
             continue
         edge_seen.add(key)
+        owner=b if lbl in ['father','mother'] else a
+        basis=relationship_index.at[owner,lbl+'_basis']
+        if lbl=='partner':
+            declared=relationship_index.at[owner,'partner_record']
+            if pd.isna(declared) or int(declared)!=b:
+                basis=relationship_index.at[b,'partner_basis']+' (inverse displayed)'
         net.add_edge(
             a, b,
             label=lbl,
+            title=lbl+': '+basis.replace('_',' '),
             color=color_map.get(lbl, "#cccccc"),
             dashes=(lbl == "partner"),
             arrows="to" if lbl in ("father", "mother") else ""

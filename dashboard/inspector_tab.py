@@ -6,6 +6,7 @@ original interface inside a tab. It intentionally keeps the original behavior.
 from __future__ import annotations
 
 import gc
+import json
 import os
 import sys
 import time
@@ -36,6 +37,8 @@ from dashboard.ds_io import (  # type: ignore
     members_to_str,
     save_version,
     _file_sig,  # for cache-key arg
+    family_record_index,
+    artifact_kind,
 )
 from dashboard.graphing import (  # type: ignore
     build_pyvis_family_tree,
@@ -67,16 +70,17 @@ def show_inspector_tab(REPO_ROOT: Optional[str] = None) -> None:
 
     REPO = REPO_ROOT or REPO_ROOT_FALLBACK
 
-    default_people = os.path.join(REPO, "raw_data", "people.csv")
-    default_parish = os.path.join(REPO, "raw_data", "parishes.csv")
-    default_shard = os.path.join(REPO, "runs", "hundred_loose_dual", "shard_s0_of_1")
+    from dashboard.release_paths import default_data_paths,default_run_directory
+    default_people, _ = default_data_paths(REPO)
+    default_parish = os.path.join(os.path.dirname(default_people), "parishes.csv")
+    default_shard = default_run_directory(REPO)
     default_versions = os.path.join(REPO, "versions")
 
     with st.sidebar.expander("📂 File Paths", expanded=True):
         people_csv = st.text_input(
             "People CSV",
             value=default_people,
-            help="Path to the main data file containing details for each record, including the hand-labeled person ID."
+            help="Path to the main data file containing details for each record, including the reference person ID."
         )
         run_root = st.text_input(
             "Run Directory",
@@ -227,10 +231,10 @@ def show_inspector_tab(REPO_ROOT: Optional[str] = None) -> None:
             ds_labels.append(lab)
             ds_paths[lab] = vp
         if ds_labels:
-            sel = st.selectbox("Dataset", options=ds_labels, key="dataset_picker")
+            sel = st.selectbox("Dataset", options=ds_labels, index=None, key="dataset_picker")
             chosen_path = ds_paths.get(sel, "")
             prev = st.session_state.get("dataset_loaded_path", "")
-            if chosen_path and chosen_path != prev:
+            if st.button("Load chosen dataset", key="load_chosen_sidebar_dataset", disabled=not chosen_path):
                 try:
                     _load_backend(chosen_path)
                     st.session_state["dataset_loaded_path"] = chosen_path
@@ -255,7 +259,7 @@ def show_inspector_tab(REPO_ROOT: Optional[str] = None) -> None:
 
     if not people_ok or st.session_state.baseline_clusters is None:
         st.info("Waiting for data to be loaded. Check Data Sources in the sidebar.")
-        st.stop()
+        return
 
     if not st.session_state.editing_enabled and not st.session_state.warned_no_working_copy:
         st.warning("Editing is currently disabled. Start an editing session to make changes.")
@@ -351,7 +355,10 @@ def show_inspector_tab(REPO_ROOT: Optional[str] = None) -> None:
         ].copy()
         return edges_in_cluster
 
+    is_source_review = artifact_kind(str(st.session_state.baseline_label))=='reference_structure'
     with st.expander("📊 Session Information", expanded=True):
+        if is_source_review:
+            st.info('Source-review structure derived from reference IDs. Use it to inspect evidence; it is not an independent model result.')
         col_info1, col_info2 = st.columns(2)
         with col_info1:
             st.markdown("**📦 Baseline Dataset**")
@@ -400,12 +407,12 @@ def show_inspector_tab(REPO_ROOT: Optional[str] = None) -> None:
                 options=clusters_sorted["cluster_id"].astype(int).tolist(), 
                 index=0, 
                 key="cluster_select_top", 
-                help="Choose a predicted cluster to inspect and analyze"
+                help="Choose a reference-derived cluster to inspect" if is_source_review else "Choose a predicted cluster to inspect and analyze"
             )
             if cid is not None:
                 members_for_dropdown = clusters_df.loc[clusters_df["cluster_id"] == int(cid), "members"].iloc[0]
                 root_id = st.selectbox(
-                    "Root Person", 
+                    "Root record", 
                     options=members_for_dropdown, 
                     index=0, 
                     help="Select the starting person for the Genealogical Tree visualization"
@@ -430,10 +437,10 @@ def show_inspector_tab(REPO_ROOT: Optional[str] = None) -> None:
                 ds_labels_inline.append(lab)
                 ds_paths_inline[lab] = vp
             if ds_labels_inline:
-                sel_inline = st.selectbox("Dataset", options=ds_labels_inline, key="dataset_picker_inline", help="Quickly switch dataset")
+                sel_inline = st.selectbox("Dataset", options=ds_labels_inline, index=None, key="dataset_picker_inline", help="Choose a dataset, then press Switch dataset")
                 chosen_path_inline = ds_paths_inline.get(sel_inline, "")
                 prev_inline = st.session_state.get("dataset_loaded_path", "")
-                if chosen_path_inline and chosen_path_inline != prev_inline:
+                if st.button("Switch dataset", key="load_chosen_inline_dataset", disabled=not chosen_path_inline):
                     try:
                         _load_backend(chosen_path_inline)
                         st.session_state["dataset_loaded_path"] = chosen_path_inline
@@ -461,7 +468,7 @@ def show_inspector_tab(REPO_ROOT: Optional[str] = None) -> None:
                         neighbor_id = b if a == int(root_id) else a
                         p_nei = people_df[people_df["id"] == neighbor_id]
                         name_nei = f"{p_nei.iloc[0]['first_name']} {p_nei.iloc[0]['patronym'] or p_nei.iloc[0]['surname'] or ''}".strip() if not p_nei.empty else f"ID {neighbor_id}"
-                        label_status = "New Prediction"
+                        label_status = "Unknown reference" if is_source_review else "New Prediction"
                         try:
                             if not p_nei.empty and pd.notna(p_nei.iloc[0]["person"]):
                                 nperson = int(p_nei.iloc[0]["person"])  
@@ -629,7 +636,7 @@ def show_inspector_tab(REPO_ROOT: Optional[str] = None) -> None:
 
     with colL:
         st.markdown("### 📋 Cluster Summary")
-        st.caption("Analysis of the selected cluster compared to hand-labeled ground truth")
+        st.caption("Analysis of the selected cluster compared to available reference IDs; agreement does not establish historical identity accuracy")
         
         if cid is None:
             st.stop()
@@ -646,7 +653,7 @@ def show_inspector_tab(REPO_ROOT: Optional[str] = None) -> None:
             st.metric("Cluster Size", int(row['size']))
 
         st.markdown("---")
-        st.markdown("**🏷️ Prediction vs. Hand-Labels**")
+        st.markdown("**🏷️ Source Observations and Reference IDs**" if is_source_review else "**🏷️ Prediction vs. Reference IDs**")
         person_ids_in_cluster = people_df.loc[people_df["id"].isin(members), "person"]
         anchor_person_id = None
 
@@ -655,12 +662,13 @@ def show_inspector_tab(REPO_ROOT: Optional[str] = None) -> None:
             anchor_person_id = person_counts.most_common(1)[0][0]
 
             if len(person_counts) == 1:
-                st.success(f"✅ **Consistent**: Matches hand-labeled Person ID {anchor_person_id}")
+                st.success(f"✅ **Consistent**: Matches reference Person ID {anchor_person_id}")
             else:
-                st.warning(f"⚠️ **Discrepant**: Merged {len(person_counts)} different hand-labeled groups")
+                st.warning(f"⚠️ **Discrepant**: Merged {len(person_counts)} different reference groups")
                 st.dataframe(pd.DataFrame(person_counts.items(), columns=["Person ID", "Count"]).sort_values("Count", ascending=False), use_container_width=True)
         else:
-            st.info("ℹ️ **New Prediction**: No existing hand-labels for these records")
+            status_label = 'Unknown reference identities' if is_source_review else 'New Prediction'
+            st.info(f"ℹ️ **{status_label}**: No existing reference IDs for these records")
 
         sub = people_df.loc[
             people_df["id"].isin(members),
@@ -671,7 +679,7 @@ def show_inspector_tab(REPO_ROOT: Optional[str] = None) -> None:
             """Applies CSS styling to a DataFrame row for visual highlighting.
 
             Used with `df.style.apply` to color-code records in the cluster member table
-            based on whether their hand-label matches the cluster's dominant (anchor) label.
+            based on whether their reference ID matches the cluster's dominant (anchor) label.
 
             Args:
                 row (pd.Series): A row of the people DataFrame.
@@ -691,6 +699,8 @@ def show_inspector_tab(REPO_ROOT: Optional[str] = None) -> None:
         <div style="display: flex; align-items: center; margin-right: 20px;"><div style="width: 15px; height: 15px; background-color: transparent; margin-right: 5px; border: 1px solid #888;"></div><span>New Prediction</span></div>
         <div style="display: flex; align-items: center; margin-right: 20px;"><div style="width: 15px; height: 15px; background-color: #4A6984; margin-right: 5px; border: 1px solid #ccc;"></div><span>Anchor Group</span></div>
         <div style="display: flex; align-items: center;"><div style="width: 15px; height: 15px; background-color: #8B0000; margin-right: 5px; border: 1px solid #ccc;"></div><span>Discrepant Member</span></div></div>"""
+        if is_source_review:
+            legend_html = legend_html.replace('<span>New Prediction</span>', '<span>Unknown reference</span>')
         st.markdown(legend_html, unsafe_allow_html=True)
 
     st.markdown("---")
@@ -711,9 +721,8 @@ def show_inspector_tab(REPO_ROOT: Optional[str] = None) -> None:
                     ],
                     key="retrain_method"
                 )
-                if st.button("🚀 Start Complete Retrain", key="start_retrain"):
-                    st.info("🔄 Starting complete retrain...")
-                    st.success("✅ Complete retrain completed! Check the new results.")
+                st.button("🚀 Start Complete Retrain", key="start_retrain",disabled=True)
+                st.caption('Feedback-based retraining is not implemented. Export feedback for independent review before using it as supervision.')
             with col_finetune:
                 st.markdown("**🎯 Finetune Current Cluster**")
                 st.markdown("Finetune the model specifically on this cluster's feedback")
@@ -725,15 +734,13 @@ def show_inspector_tab(REPO_ROOT: Optional[str] = None) -> None:
                     ],
                     key="finetune_method"
                 )
-                if st.button("🎯 Start Cluster Finetune", key="start_finetune"):
-                    st.info(f"🎯 Starting finetune on cluster {cid}...")
-                    st.success("✅ Cluster finetune completed! Check the updated results.")
+                st.button("🎯 Start Cluster Finetune", key="start_finetune",disabled=True)
+                st.caption('Cluster-feedback fine-tuning is not implemented.')
             st.markdown("---")
             st.subheader("📁 Feedback Management")
             col_export, col_import = st.columns(2)
             with col_export:
                 if st.button("📤 Export Feedback", key="export_feedback"):
-                    import json
                     feedback_json = json.dumps(st.session_state.edge_feedback, indent=2)
                     st.download_button(
                         label="Download feedback.json",
@@ -745,7 +752,6 @@ def show_inspector_tab(REPO_ROOT: Optional[str] = None) -> None:
                 uploaded_feedback = st.file_uploader("Import feedback", type=['json'], key="import_feedback")
                 if uploaded_feedback is not None:
                     try:
-                        import json
                         feedback_data = json.load(uploaded_feedback)
                         st.session_state.edge_feedback = feedback_data
                         st.success("✅ Feedback imported successfully!")
@@ -763,10 +769,10 @@ def show_inspector_tab(REPO_ROOT: Optional[str] = None) -> None:
 
     with c1:
         st.markdown("### 🔗 Match Network")
-        st.caption("Predicted edges between records in the cluster")
+        st.caption("Reference-derived edges between source observations" if is_source_review else "Predicted edges between records in the cluster")
         cluster_by_option = st.selectbox(
             "Visually group nodes by:",
-            ["Label Status", "Hand-Label (person)", "Parish", "Census (heimild)"],
+            ["Label Status", "Reference person", "Parish", "Census (heimild)"],
             index=0,
             help="Draw shapes around nodes sharing an attribute."
         )
@@ -774,7 +780,7 @@ def show_inspector_tab(REPO_ROOT: Optional[str] = None) -> None:
 
         group_keys = None
         if cluster_by_option != "Label Status":
-            col = {"Parish": "parish", "Census (heimild)": "heimild", "Hand-Label (person)": "person"}[cluster_by_option]
+            col = {"Parish": "parish", "Census (heimild)": "heimild", "Reference person": "person"}[cluster_by_option]
             group_keys = sorted(sub[col].dropna().unique().tolist())
 
         net_graph, legend_info = build_pyvis_network_graph(
@@ -800,6 +806,8 @@ def show_inspector_tab(REPO_ROOT: Optional[str] = None) -> None:
 
             parts = ['<div style="display: flex; flex-wrap: wrap; margin-top: 10px; font-size: 12px; color: #E0E0E0;">']
             for name, color in display_items:
+                if is_source_review and cluster_by_option == "Label Status" and name == "New":
+                    name = "Unknown reference"
                 parts.append(
                     '<div style="display: flex; align-items: center; margin-right: 15px;">'
                     f'<div style="width: 12px; height: 12px; background-color: {color}; border-radius: 6px; margin-right: 5px;"></div>'
@@ -810,17 +818,15 @@ def show_inspector_tab(REPO_ROOT: Optional[str] = None) -> None:
 
     with c2:
         st.markdown("### 🌳 Genealogical Tree")
-        st.caption("Family relationships from source data")
+        st.caption("Recorded family and household roles, including possible foster relations. Edge tooltips distinguish source pointers from uniquely resolved person references.")
         tree_scope = st.radio("Show tree for:", ("Root person only", "All cluster members"), index=0, horizontal=True, key="tree_scope_radio")
         enable_physics = st.checkbox("Enable physics for free movement", value=True, key="fam_physics_toggle", help="Toggle between hierarchical and dynamic layouts.")
-        family_node_limit = st.number_input("Max nodes", value=10, key="fam_node_limit")
-        family_depth_up = st.number_input("Generations up", value=10, max_value=100, key="fam_up")
-        family_depth_down = st.number_input("Generations down", value=10, max_value=100, key="fam_down")
-        depth_limit = int(family_depth_up) + int(family_depth_down)
+        family_node_limit = st.number_input("Max nodes", min_value=1,value=10, key="fam_node_limit")
+        depth_limit=st.number_input('Relationship steps',min_value=0,value=2,max_value=100,key='family_relationship_steps')
 
         tree_cluster_by_option = st.selectbox(
             "Visually group nodes by:",
-            ["Label Status", "Hand-Label (person)", "Parish", "Census (heimild)"],
+            ["Label Status", "Reference person", "Parish", "Census (heimild)"],
             index=0,
             help="Draw shapes around nodes sharing an attribute.",
             key="tree_cluster_by_option"
@@ -828,7 +834,7 @@ def show_inspector_tab(REPO_ROOT: Optional[str] = None) -> None:
 
         tree_group_keys = None
         if tree_cluster_by_option != "Label Status":
-            col = {"Parish": "parish", "Census (heimild)": "heimild", "Hand-Label (person)": "person"}[tree_cluster_by_option]
+            col = {"Parish": "parish", "Census (heimild)": "heimild", "Reference person": "person"}[tree_cluster_by_option]
             tree_group_keys = sorted(sub[col].dropna().unique().tolist())
 
         tree_seeds = [root_id] if tree_scope == "Root person only" and root_id is not None else members
@@ -836,7 +842,7 @@ def show_inspector_tab(REPO_ROOT: Optional[str] = None) -> None:
             seeds=tree_seeds,
             people_df=people_df,
             node_limit=int(family_node_limit),
-            depth_limit=max(1, depth_limit),
+            depth_limit=int(depth_limit),
             physics_enabled=enable_physics,
             anchor_person_id=anchor_person_id,
             cluster_by=tree_cluster_by_option,
@@ -844,6 +850,11 @@ def show_inspector_tab(REPO_ROOT: Optional[str] = None) -> None:
             color_palette=COLOR_PALETTE,
         )
         render_pyvis_graph(fam_graph)
+        visible=[int(n['id']) for n in fam_graph.nodes]
+        relation_records=family_record_index(people_df,people_df.attrs.get('source_signature',''))['records']
+        basis=relation_records.loc[relation_records.index.intersection(visible),['father_basis','mother_basis','partner_basis']]
+        unresolved=int(basis.isin(['source_record_unavailable','person_reference_unresolved']).to_numpy().sum())
+        if unresolved:st.caption(f'{unresolved} kin references on visible records remain unresolved and are omitted from the graph.')
         
         if tree_legend_info:
             display_items = []
@@ -856,6 +867,8 @@ def show_inspector_tab(REPO_ROOT: Optional[str] = None) -> None:
 
             parts = ['<div style="display: flex; flex-wrap: wrap; margin-top: 10px; font-size: 12px; color: #E0E0E0;">']
             for name, color in display_items:
+                if is_source_review and tree_cluster_by_option == "Label Status" and name == "New":
+                    name = "Unknown reference"
                 parts.append(
                     '<div style="display: flex; align-items: center; margin-right: 15px;">'
                     f'<div style="width: 12px; height: 12px; background-color: {color}; border-radius: 6px; margin-right: 5px;"></div>'
@@ -870,7 +883,7 @@ def show_inspector_tab(REPO_ROOT: Optional[str] = None) -> None:
                 present_ids = sub["id"].astype(int).tolist()
                 local = st.session_state.people.loc[
                     st.session_state.people["id"].isin(present_ids),
-                    ["id", "father", "mother", "partner", "sex"]
+                    ["id", "person", "father", "mother", "partner", "sex"]
                 ].copy()
 
                 rows = []
@@ -892,10 +905,12 @@ def show_inspector_tab(REPO_ROOT: Optional[str] = None) -> None:
                     f = as_int(r.get("father"))
                     m = as_int(r.get("mother"))
                     p = as_int(r.get("partner"))
+                    own_person = as_int(r.get('person'))
 
                     issues = []
-                    if p is not None and p == cid_local:
-                        issues.append("self_partner")
+                    for relationship,target in [('partner',p),('father',f),('mother',m)]:
+                        if target is not None and own_person is not None and target == own_person:
+                            issues.append('self_'+relationship)
                     if f is not None and m is not None and f == m:
                         issues.append("same_parent_id_in_both_columns")
 

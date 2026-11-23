@@ -120,6 +120,11 @@ cd ..
 streamlit run dashboard/app.py
 ```
 
+The dashboard reads `raw_data/` and `runs/` by default. To open a corrected reference
+release instead, set `ICEID_RELEASE_DIR` to a release directory containing a complete
+`manifest.json` and an `application_paths.json` (or place a `label-repair/pipeline_paths.json`
+next to the repository that names `selected_release`).
+
 ---
 
 ## 📊 Data Sources

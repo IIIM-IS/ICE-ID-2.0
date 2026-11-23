@@ -7,6 +7,7 @@ from __future__ import annotations
 import os
 import sys
 import inspect
+import json
 from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
@@ -34,254 +35,18 @@ from dashboard.inspector_tab import show_inspector_tab  # type: ignore
 # --------------------------------------------------------------------------------------
 # Small helpers for the Evaluation tab
 # --------------------------------------------------------------------------------------
-def _metric_explanations() -> Dict[str, str]:
-    """Provides short definitions for each metric key shown in the UI.
-
-    Returns:
-        Dict[str, str]: A dictionary mapping metric names to their explanations.
-    """
-    return {
-        "prec_labeled": "Precision on labeled pairs (true positives / (true positives + false positives))",
-        "rec_labeled": "Recall on labeled pairs (true positives / (true positives + false negatives))",
-        "f1_labeled": "F1 score on labeled pairs (harmonic mean of precision and recall)",
-        "prec_labeled_wilson95": "Wilson 95% confidence interval for precision on labeled pairs",
-        "edges_total": "Total number of predicted edges/pairs",
-        "semi_novel_edges": "Edges where one node is labeled, one is unlabeled",
-        "novel_edges": "Edges where both nodes are unlabeled",
-        "est_true_new_edges": "Estimated number of true edges among novel/semi-novel predictions",
-        "nodes_with_any_match": "Number of nodes that have at least one predicted match",
-        "cluster_stats": "Statistics about the clustering results (purity, number of clusters, etc.)",
-    }
-
-def _train_param_explanations() -> Dict[str, str]:
-    """Provides short definitions for training parameters shown in the UI.
-
-    Returns:
-        Dict[str, str]: A dictionary mapping parameter names to their explanations.
-    """
-    return {
-        "people_csv": "Path to the people.csv file containing individual records",
-        "labels_csv": "Path to the labels.csv file containing ground truth cluster labels",
-        "out_dir": "Output directory where results will be saved",
-        "backends": "Comma-separated list of backends to run (e.g., 'gbdt,logreg')",
-        "num_shards": "Number of shards to split the data into for parallel processing",
-        "shard_id": "ID of the current shard (0-based)",
-        "n_workers": "Number of worker processes for parallel processing",
-        "max_block_size": "Maximum size of a blocking group",
-        "max_pairs_per_block": "Maximum number of pairs to generate per block",
-        "gbdt_neg_ratio": "Ratio of negative to positive samples for GBDT training",
-        "thresh_grid": "Number of threshold values to test for optimal threshold selection",
-        "seed": "Random seed for reproducibility",
-        "sample_frac": "Fraction of data to use (1.0 = all data, 0.1 = 10%)",
-        "fn_prefix": "Length of first name prefix for blocking",
-        "pat_prefix": "Length of patronymic prefix for blocking",
-        "year_bucket_width": "Width of year buckets for blocking",
-        "dual_blocking": "Whether to use dual blocking (both forward and reverse)",
-        "soft_filter_max_year_diff": "Maximum year difference for soft filtering",
-        "soft_filter_sex": "Whether to apply sex-based soft filtering",
-        "preview_window": "Fraction of data to use for preview/validation",
-        "preview_limit": "Maximum number of samples for preview",
-    }
-
-def _bytes_to_human(n: int) -> str:
-    """Converts bytes to human-readable format.
-
-    Args:
-        n (int): Number of bytes.
-
-    Returns:
-        str: Human-readable string (e.g., "1.2 MB").
-    """
-    for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
-        if n < 1024.0:
-            return f"{n:.1f} {unit}"
-        n /= 1024.0
-    return f"{n:.1f} PB"
-
-def _grade(value: Optional[float], bands: List[Tuple[float, str]]) -> str:
-    """Grades a numerical value based on threshold bands.
-
-    Args:
-        value (Optional[float]): The numerical value to grade. Can be None.
-        bands (List[Tuple[float, str]]): A list of (threshold, label) tuples, sorted in descending order of threshold.
-
-    Returns:
-        str: The corresponding label ('poor' if below all thresholds, 'unknown' if value is None).
-    """
-    if value is None:
-        return "unknown"
-    for th, lab in bands:
-        if value >= th:
-            return lab
-    return "poor"
-
-def _fmt_pct(x: Optional[float]) -> str:
-    """Formats a float as a percentage string.
-
-    Args:
-        x (Optional[float]): The float to format (e.g., 0.951). Returns '—' if None.
-
-    Returns:
-        str: The formatted percentage string (e.g., "95.1%").
-    """
-    return "—" if x is None else f"{100.0 * x:.1f}%"
-
-def _auto_conclusions(r: Dict) -> Dict[str, str]:
-    """Generates heuristic, human-readable conclusions for a backend's metrics.
-
-    Args:
-        r (Dict): A dictionary of evaluation results for a single backend.
-
-    Returns:
-        Dict[str, str]: A dictionary mapping metric names to their automated interpretation.
-    """
-    out: Dict[str, str] = {}
-    # Pull fields
-    prec = r.get("prec_labeled")
-    ci = r.get("prec_labeled_wilson95") or (None, None)
-    ci_lo, ci_hi = ci
-    ci_width = None if (ci_lo is None or ci_hi is None) else (ci_hi - ci_lo)
-
-    edges_total = r.get("edges_total")
-    semi_novel = r.get("semi_novel_edges")
-    novel = r.get("novel_edges")
-    est_new = r.get("est_true_new_edges")
-    nodes_any = r.get("nodes_with_any_match")
-
-    cl = (r.get("cluster_stats") or {})
-    n_clusters = cl.get("n_clusters")
-    purity_w = cl.get("weighted_purity_on_labeled")
-
-    # Precision
-    grade = _grade(prec, [(0.95, "excellent"), (0.90, "good"), (0.80, "ok")])
-    if prec is None:
-        out["prec_labeled"] = "Precision unknown on labeled pairs (likely zero labeled overlap). Consider checking label file alignment."
-    else:
-        if grade in ("excellent", "good"):
-            msg = f"{grade.capitalize()} precision {_fmt_pct(prec)} on labeled pairs."
-        elif grade == "ok":
-            msg = f"Moderate precision {_fmt_pct(prec)}; expect some false positives—consider stricter thresholding or feature tweaks."
-        else:
-            msg = f"Low precision {_fmt_pct(prec)}; many predicted pairs among labeled items are wrong."
-        if ci_width is not None:
-            if ci_width <= 0.1:
-                msg += f" CI [{_fmt_pct(ci_lo)}, {_fmt_pct(ci_hi)}] is tight → estimate is stable."
-            else:
-                msg += f" CI [{_fmt_pct(ci_lo)}, {_fmt_pct(ci_hi)}] is wide → limited labeled volume or unstable thresholds."
-        out["prec_labeled"] = msg
-
-    # Edges volume
-    if isinstance(edges_total, int):
-        if edges_total == 0:
-            out["edges_total"] = "No predicted pairs. Check thresholds or model outputs."
-        elif edges_total < 100:
-            out["edges_total"] = f"Low volume ({edges_total}). Might be too conservative or data is small."
-        else:
-            out["edges_total"] = f"{edges_total} predicted pairs. Reasonable volume for downstream clustering."
-    else:
-        out["edges_total"] = "Predicted pair count unavailable."
-
-    # Novel vs semi-novel
-    if isinstance(semi_novel, int) and isinstance(novel, int):
-        total_unlab = semi_novel + novel
-        if total_unlab == 0:
-            out["novel_edges"] = "No unlabeled-side discoveries. Model may be over-conservative on new regions."
-        else:
-            if est_new is None or prec is None:
-                out["novel_edges"] = f"{total_unlab} potential new edges (semi-novel + novel). Precision unknown—review samples."
-            else:
-                exp_true = int(est_new)
-                if prec >= 0.9:
-                    out["novel_edges"] = f"{total_unlab} potential new edges; ~{exp_true} expected true → strong discovery potential."
-                elif prec >= 0.8:
-                    out["novel_edges"] = f"{total_unlab} potential new edges; ~{exp_true} expected true → decent, but verify borderline cases."
-                else:
-                    out["novel_edges"] = f"{total_unlab} potential new edges; ~{exp_true} expected true → many may be spurious."
-    else:
-        out["novel_edges"] = "Novel/semi-novel edge counts unavailable."
-
-    # Clusters
-    if isinstance(n_clusters, int):
-        if n_clusters == 0:
-            out["cluster_stats"] = "No clusters formed. Check if edges were generated and clustering logic."
-        elif n_clusters == 1:
-            out["cluster_stats"] = f"Single cluster ({n_clusters}). May indicate over-clustering or insufficient data."
-        else:
-            out["cluster_stats"] = f"{n_clusters} clusters formed."
-            if purity_w is not None:
-                grade_p = _grade(purity_w, [(0.95, "excellent"), (0.90, "good"), (0.80, "ok")])
-                out["cluster_stats"] += f" Weighted purity: {_fmt_pct(purity_w)} ({grade_p})."
-    else:
-        out["cluster_stats"] = "Cluster statistics unavailable."
-
-    return out
-
-@st.cache_data(ttl=60)
-def _get_available_run_directories() -> List[str]:
-    """Scans the runs directory to find available run directories.
-
-    Returns:
-        List[str]: A list of available run directory paths, sorted by modification time (newest first).
-    """
-    runs_dir = os.path.join(ICEID_ROOT, "runs")
-    if not os.path.exists(runs_dir):
-        return []
-
-    run_dirs = []
-    for item in os.listdir(runs_dir):
-        item_path = os.path.join(runs_dir, item)
-        if os.path.isdir(item_path):
-            # Check if it contains any backend subdirectories or is a shard directory
-            has_backends = False
-            for subitem in os.listdir(item_path):
-                subitem_path = os.path.join(item_path, subitem)
-                if os.path.isdir(subitem_path):
-                    # Check if it's a backend directory (has edges.csv or clusters.csv)
-                    if (os.path.exists(os.path.join(subitem_path, "edges.csv")) or
-                        os.path.exists(os.path.join(subitem_path, "clusters.csv"))):
-                        has_backends = True
-                        break
-                    # Or if it's a shard directory
-                    if subitem.startswith("shard_"):
-                        has_backends = True
-                        break
-
-            if has_backends:
-                run_dirs.append(item_path)
-
-    # Sort by modification time (newest first)
-    run_dirs.sort(key=lambda x: os.path.getmtime(x), reverse=True)
-    return run_dirs
-
-@st.cache_data(ttl=60)
-def _get_available_backends(run_dir: str) -> List[str]:
-    """Scans a run directory to find available backend subdirectories.
-
-    Args:
-        run_dir (str): Path to the run directory to scan.
-
-    Returns:
-        List[str]: A list of available backend names, sorted alphabetically.
-    """
-    if not os.path.exists(run_dir):
-        return []
-
-    backends = []
-    for item in os.listdir(run_dir):
-        item_path = os.path.join(run_dir, item)
-        if os.path.isdir(item_path):
-            # Check if it's a backend directory (has edges.csv or clusters.csv)
-            if (os.path.exists(os.path.join(item_path, "edges.csv")) or
-                os.path.exists(os.path.join(item_path, "clusters.csv"))):
-                backends.append(item)
-
-    backends.sort()
-    return backends
+from dashboard.ui_helpers import (
+    _metric_explanations, _train_param_explanations, _bytes_to_human,
+    _grade, _fmt_pct, _auto_conclusions, _get_available_run_directories,
+    _get_available_backends,
+)
+from dashboard.release_paths import default_data_paths
 
 # --------------------------------------------------------------------------------------
 # Main app
 # --------------------------------------------------------------------------------------
 st.set_page_config(page_title="ICE-ID: Clustering Dashboard", layout="wide")
+st.caption("Scores measure agreement with reference IDs. Unknown identities remain unknown; historical accuracy requires independent source adjudication.")
 st.title("ICE-ID Dashboard")
 
 # --------------------------------------------------------------------------------------
@@ -333,8 +98,7 @@ with tab_train:
 
         with st.form("train_form", clear_on_submit=False):
             # Paths (match your repo layout)
-            default_people = os.path.join(ICEID_ROOT, "raw_data", "people.csv")
-            default_labels = os.path.join(ICEID_ROOT, "raw_data", "manntol_einstaklingar_new.csv")
+            default_people, default_labels = default_data_paths(ICEID_ROOT)
             # Use an existing runs root by default
             default_out = os.path.join(ICEID_ROOT, "runs", "hundred_loose_dual")
 
@@ -557,8 +321,7 @@ with tab_train:
         st.markdown("---")
 
         # Paths and model selection (outside form so parameters update immediately)
-        default_people = os.path.join(ICEID_ROOT, "raw_data", "people.csv")
-        default_labels = os.path.join(ICEID_ROOT, "raw_data", "manntol_einstaklingar_new.csv")
+        default_people, default_labels = default_data_paths(ICEID_ROOT)
         default_out = os.path.join(ICEID_ROOT, "runs", "external_models")
 
         people_csv = st.text_input("people.csv path", value=default_people, help="Path to the CSV file containing people records")
@@ -1019,8 +782,7 @@ with tab_eval:
     available_runs = _get_available_run_directories()
 
     # Default paths
-    default_people = os.path.join(ICEID_ROOT, "raw_data", "people.csv")
-    default_labels = os.path.join(ICEID_ROOT, "raw_data", "manntol_einstaklingar_new.csv")
+    default_people, default_labels = default_data_paths(ICEID_ROOT)
 
     # Create display names for run directories (show relative path and modification time)
     run_display_names = []
@@ -1102,6 +864,11 @@ with tab_eval:
                 )
             
             st.success(f"✅ Evaluated {len(backends_eval)} backend(s) successfully!")
+            st.download_button('Download Evaluation JSON', json.dumps(run_report,indent=2),
+                               file_name='iceid_evaluation.json',mime='application/json')
+            st.caption('Edge precision describes accepted exported edges with known reference IDs. '
+                       'Partition ARI/B³ includes declared isolates and excludes unknown reference identities. '
+                       'Candidate recall/F1 requires the full candidate cases and is unavailable from accepted edges alone.')
 
             # ----------------------------------------------------------------------------------
             # Summary Table
@@ -1110,7 +877,8 @@ with tab_eval:
             
             # Prepare data for the summary table
             summary_data = []
-            metric_keys = ["prec_labeled", "rec_labeled", "f1_labeled", "edges_total", "nodes_with_any_match"]
+            metric_keys = ["prec_labeled", "rec_labeled", "f1_labeled", "edges_total", "nodes_with_any_match",
+                           "partition_nodes", "n_isolates", "ari", "b3_f1"]
             
             for backend in backends_eval:
                 row = {"Backend": backend}
@@ -1119,6 +887,8 @@ with tab_eval:
                     value = backend_metrics.get(key)
                     if key in ["prec_labeled", "rec_labeled", "f1_labeled"]:
                         row[key] = _fmt_pct(value)
+                    elif isinstance(value,float):
+                        row[key] = f"{value:.4f}"
                     elif isinstance(value, (int, float)):
                         row[key] = f"{value:,}"
                     else:
@@ -1151,7 +921,8 @@ with tab_eval:
                     "rec_labeled": "Recall (Labeled)", 
                     "f1_labeled": "F1 Score (Labeled)", 
                     "edges_total": "Total Pairs",
-                    "nodes_with_any_match": "Nodes w/ Match"
+                    "nodes_with_any_match": "Nodes w/ Match", "partition_nodes":"Declared Nodes",
+                    "n_isolates":"Predicted Isolates", "ari":"Partition ARI", "b3_f1":"Partition B³ F1"
                 }
                 summary_df = summary_df.rename(columns=col_rename)
                 
@@ -1190,6 +961,10 @@ with tab_eval:
                 if not backend_report:
                     st.warning("No report generated for this backend. Check logs for errors.")
                     continue
+                if 'partition_nodes' in backend_report:
+                    st.caption(f"Declared population: {backend_report['partition_nodes']:,} records; "
+                               f"known references evaluated: {backend_report['partition_reference_nodes']:,}; "
+                               f"unknown references excluded: {backend_report['partition_unknown_nodes']:,}.")
                 
                 # Automated Conclusions
                 conclusions = _auto_conclusions(backend_report)
@@ -1201,18 +976,7 @@ with tab_eval:
                 
                 # Display full metrics
                 with st.expander("Show All Raw Metrics", expanded=False):
-                    metrics_to_show = {}
-                    for k, v in backend_report.items():
-                        if isinstance(v, (float, int)):
-                            metrics_to_show[k] = f"{v:.4f}" if isinstance(v, float) else f"{v:,}"
-                        elif isinstance(v, tuple) and len(v) == 2: # CI
-                            metrics_to_show[k] = f"({_fmt_pct(v[0])}, {_fmt_pct(v[1])})"
-                        elif isinstance(v, dict): # Cluster stats
-                            metrics_to_show[k] = {vk: (f"{vv:.4f}" if isinstance(vv, float) else f"{vv:,}") for vk, vv in v.items()}
-                        else:
-                            metrics_to_show[k] = str(v)
-                            
-                    st.json(metrics_to_show)
+                    st.json(backend_report)
                 
                 st.markdown("---")
 
@@ -1238,32 +1002,21 @@ with tab_data_editor:
     
     # Data Overview Section
     st.markdown("### 📊 Data Overview")
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.metric("People Records", "Loading...", help="Total number of people in the dataset")
-    with col2:
-        st.metric("Available Backends", "Loading...", help="Number of model backends available")
-    with col3:
-        st.metric("Saved Versions", "Loading...", help="Number of manually edited versions")
-    
     # Try to load actual data for metrics
     try:
-        if "people_count" not in st.session_state:
-            from dashboard.ds_io import load_people
-            people_df = load_people(os.path.join(ICEID_ROOT, "raw_data", "people.csv"), "dummy_sig")
+        from dashboard.ds_io import load_people, _file_sig
+        people_path=default_data_paths(ICEID_ROOT)[0]
+        people_signature=_file_sig(people_path)
+        if st.session_state.get('people_count_signature')!=people_signature:
+            people_df = load_people(people_path,people_signature)
             st.session_state["people_count"] = len(people_df)
+            st.session_state['people_count_signature']=people_signature
+            del people_df
         
-        if "backend_count" not in st.session_state:
-            from dashboard.ds_io import detect_backends
-            runs_dir = os.path.join(ICEID_ROOT, "runs")
-            backend_count = 0
-            if os.path.exists(runs_dir):
-                for run_dir in os.listdir(runs_dir):
-                    run_path = os.path.join(runs_dir, run_dir)
-                    if os.path.isdir(run_path):
-                        backend_count += len(detect_backends(run_path))
-            st.session_state["backend_count"] = backend_count
+        from dashboard.ds_io import detect_backends
+        from dashboard.release_paths import default_run_directory
+        selected_run=default_run_directory(ICEID_ROOT)
+        st.session_state['backend_count']=len(detect_backends(selected_run)) if os.path.isdir(selected_run) else 0
         
         if "version_count" not in st.session_state:
             versions_dir = os.path.join(ICEID_ROOT, "versions")
@@ -1290,11 +1043,11 @@ with tab_data_editor:
     st.markdown("### 📝 CSV Data Editor")
     
     csv_files = [
-        ("people.csv", os.path.join(ICEID_ROOT, "raw_data", "people.csv")),
-        ("labels.csv", os.path.join(ICEID_ROOT, "raw_data", "manntol_einstaklingar_new.csv")),
-        ("parishes.csv", os.path.join(ICEID_ROOT, "raw_data", "parishes.csv")),
-        ("counties.csv", os.path.join(ICEID_ROOT, "raw_data", "counties.csv")),
-        ("districts.csv", os.path.join(ICEID_ROOT, "raw_data", "districts.csv")),
+        ("people.csv", default_data_paths(ICEID_ROOT)[0]),
+        ("labels.csv", default_data_paths(ICEID_ROOT)[1]),
+        ("parishes.csv", os.path.join(os.path.dirname(people_path), "parishes.csv")),
+        ("counties.csv", os.path.join(os.path.dirname(people_path), "counties.csv")),
+        ("districts.csv", os.path.join(os.path.dirname(people_path), "districts.csv")),
     ]
     
     available_csvs = [(name, path) for name, path in csv_files if os.path.exists(path)]
@@ -1313,13 +1066,14 @@ with tab_data_editor:
         
         try:
             @st.cache_data(ttl=300)
-            def load_csv_data(path: str):
+            def load_csv_data(path: str,file_signature: str):
                 return pd.read_csv(path)
             
-            df = load_csv_data(selected_csv_path)
+            csv_signature=_file_sig(selected_csv_path)
+            df = load_csv_data(selected_csv_path,csv_signature)
             
             # Initialize working copy in session state if not exists
-            working_copy_key = f"working_df_{selected_csv_name}"
+            working_copy_key = f"working_df_{csv_signature}"
             if working_copy_key not in st.session_state:
                 st.session_state[working_copy_key] = df.copy()
             
@@ -1464,44 +1218,43 @@ with tab_data_editor:
     
     with st.expander("View Model Data Requirements", expanded=False):
         st.markdown("""
-        **Core Required Columns for ICE-ID Pipeline:**
-        
-        **people.csv:**
-        - `id` (int64): Unique record identifier
-        - `first_name` (str): Person's first name (normalized to lowercase)
-        - `patronym` (str): Patronymic name (normalized to lowercase) 
-        - `surname` (str): Family surname (normalized to lowercase)
-        - `birthyear` (int64): Year of birth
-        - `sex` (str): Gender (normalized to lowercase: 'karl', 'kona')
-        - `person` (float64): Hand-labeled person ID for ground truth
-        - `father` (float64): Father's record ID
-        - `mother` (float64): Mother's record ID
-        - `partner` (float64): Partner's record ID
-        - `parish` (int64): Parish identifier
-        - `district` (int64): District identifier
-        - `farm` (int64): Farm identifier
-        - `heimild` (int64): Source/census identifier
-        
-        **labels.csv (manntol_einstaklingar_new.csv):**
-        - `bi_einstaklingur` (int64): Ground truth person ID
-        - Other columns used for evaluation
-        
-        **Model-Specific Requirements:**
-        
-        **PyTorch Models (Ditto, ZeroER):**
-        - Text fields: `first_name`, `patronym`, `surname` (concatenated)
-        - Numeric features: `birthyear`, `sex` (encoded), `parish`, `district`
-        - Target: Binary classification (match/no-match)
-        
-        **Scikit-learn Models (RF, GB, LR):**
-        - All numeric columns from people.csv
-        - Text features: TF-IDF vectors from name fields
-        - Categorical encoding for string fields
-        
-        **ICE-ID Pipeline:**
-        - Uses all core columns for blocking and feature engineering
-        - Generates candidate pairs, then applies ML models
-        - Outputs: `edges.csv` (id1, id2) and `clusters.csv` (cluster_id, size, members)
+        **Records and reference labels**
+
+        - `id` is the unique source-record key, not a row position or person identity.
+        - `person` is a retained reference identity assertion. An empty value means
+          unknown or quarantined; it is never a negative label or an invented singleton.
+          Retained labels have not been independently established as historical truth.
+        - `father`, `mother` and `partner` contain person-identity references, not record IDs.
+          Empty values represent missing or unresolved claims.
+        - `source_father`, `source_mother` and `source_partner` point to source records.
+          They remain distinct from the person-valued kin fields. `source_farm` is also
+          a source pointer, distinct from the observed `farm` category.
+        - `nafn_norm`, `first_name`, `patronym` and `surname` contain observed name text;
+          components can be missing. `birthyear` is nullable, and `sex` contains observed
+          categories such as `Karl` and `Kona`; blank observations remain missing.
+        - `heimild` denotes the nominal source wave. `farm`, `parish`, `district` and
+          `county` are observed geographic category codes.
+
+        **Reference mapping**
+
+        The `person` column in `people.csv` is authoritative whenever it is present.
+        The public data ships `manntol_einstaklingar_new.csv` (`id` → `bi_einstaklingur`);
+        a corrected reference release supplies `artifacts/identity_reference.csv` instead.
+        Original upstream labels must not refill unknown or quarantined rows of a corrected release.
+
+        **Corrected-release publication model inputs**
+
+        The shared record representation contains `heimild`, `nafn_norm`, `first_name`,
+        `patronym`, `surname`, `birthyear`, `sex`, `farm`, `parish`, `district` and `county`.
+        Tabular logistic regression, boosting and MLP pair features additionally compare
+        `middle_name` and marital-status agreement. Record/person IDs,
+        kin IDs, source pointers and reference-derived identity edges are excluded from
+        predictive features. Fitted preprocessing and models use eligible training records;
+        unknown and quarantined records remain available for inspection, outside benchmark labels.
+
+        Prediction exports contain `edges.csv` and a complete `clusters.csv` partition,
+        including isolates (repeated members inside one cluster are collapsed on load). Reference-derived structures retain their separate role and
+        cannot be evaluated as model predictions.
         """)
     
     st.markdown("---")

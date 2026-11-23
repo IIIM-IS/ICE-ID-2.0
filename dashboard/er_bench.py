@@ -11,7 +11,7 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 
-from .eval_api import _load_gt, analyze_backends
+from .eval_api import _load_gt, analyze_backends, _sha256_file
 
 
 @dataclass
@@ -71,6 +71,7 @@ def _pairs_from_clusters(
     max_pos: int = 2000,
     neg_ratio: float = 1.0,
     seed: int = 42,
+    adjacent_waves: Optional[Dict[int, int]] = None,
 ) -> pd.DataFrame:
     """Creates labeled pairs for EM from cluster ground truth.
 
@@ -90,7 +91,7 @@ def _pairs_from_clusters(
     id_to_text.index = people["id"].values
     cl_map: Dict[int, int] = {}
     for rid, cid in gt.itertuples(index=False):
-        if pd.isna(cid):
+        if pd.isna(cid) or int(rid) not in people_idx.index:
             continue
         cl_map[int(rid)] = int(cid)
     cluster_to_ids: Dict[int, List[int]] = {}
@@ -102,22 +103,40 @@ def _pairs_from_clusters(
             continue
         for i in range(len(members)):
             for j in range(i + 1, len(members)):
-                pos_pairs.append((members[i], members[j]))
+                a, b = members[i], members[j]
+                if adjacent_waves is not None:
+                    wa, wb = int(people_idx.at[a, "heimild"]), int(people_idx.at[b, "heimild"])
+                    if wa > wb:
+                        a, b, wa, wb = b, a, wb, wa
+                    if adjacent_waves.get(wa) != wb:
+                        continue
+                pos_pairs.append((a, b))
     rng.shuffle(pos_pairs)
     pos_pairs = pos_pairs[: max_pos]
-    pool_ids = people["id"].tolist()
-    def plausible_neg(a: int) -> int:
+    # Unknown identities are never negatives. A failed hard-negative search
+    # must not fall back to an arbitrary (possibly positive or self) record.
+    pool_ids = sorted(cl_map)
+    wave_pools, prefix_pools = {}, {}
+    for rid in pool_ids:
+        wave = int(people_idx.at[rid, "heimild"]) if adjacent_waves is not None else None
+        wave_pools.setdefault(wave, []).append(rid)
+        prefix_pools.setdefault((wave, id_to_text.get(rid, "")[:2]), []).append(rid)
+    used = {tuple(sorted(p)) for p in pos_pairs}
+    def plausible_neg(a: int, target: int) -> Optional[int]:
         ta = id_to_text.get(a, "")
         by = people_idx.loc[a, "birthyear"] if a in people_idx.index else None
-        trials = 0
-        while trials < 50:
-            b = rng.choice(pool_ids)
-            if b == a:
-                trials += 1
-                continue
-            if cl_map.get(b, None) == cl_map.get(a, None):
-                trials += 1
-                continue
+        wave = int(people_idx.at[target, "heimild"]) if adjacent_waves is not None else None
+        def available(pool):
+            return [b for b in pool if b != a and cl_map[b] != cl_map[a]
+                    and tuple(sorted((a, b))) not in used]
+        hard_pool = prefix_pools.get((wave, ta[:2]), [])
+        eligible = available(rng.sample(hard_pool, min(50, len(hard_pool))))
+        if not eligible:
+            pool = wave_pools.get(wave, [])
+            eligible = available(rng.sample(pool, min(100, len(pool))))
+            if not eligible:
+                eligible = available(pool)
+        for b in eligible[:50]:
             tb = id_to_text.get(b, "")
             ok_year = True
             if by is not None and not pd.isna(by) and str(by) != "":
@@ -131,14 +150,18 @@ def _pairs_from_clusters(
                 ok_prefix = ta[:2] == tb[:2]
             if ok_year and ok_prefix:
                 return b
-            trials += 1
-        return rng.choice(pool_ids)
+        return eligible[0] if eligible else None
     neg_pairs: List[Tuple[int, int]] = []
-    for a, _ in pos_pairs:
-        for _ in range(int(max(1, neg_ratio))):
-            b = plausible_neg(a)
-            x, y = (a, b) if a < b else (b, a)
-            neg_pairs.append((x, y))
+    if neg_ratio < 0:
+        raise ValueError("Negative sampling ratio must be nonnegative")
+    target_negatives = int(round(len(pos_pairs) * neg_ratio))
+    for i in range(target_negatives):
+        a, target = pos_pairs[i % len(pos_pairs)]
+        b = plausible_neg(a, target)
+        if b is None:
+            raise ValueError("Insufficient distinct labelled negatives; reduce requested pair budget")
+        used.add(tuple(sorted((a, b))))
+        neg_pairs.append((a, b))
     rows: List[Dict] = []
     for a, b in pos_pairs:
         rows.append({
@@ -174,6 +197,7 @@ def prepare_pair_splits(
     seed: int = 42,
     sample_frac: float = 1.0,
     sample_seed: int = 42,
+    split_strategy: str = "temporal",
 ) -> str:
     """Prepares pair classification CSV splits from ICE-ID people and labels.
 
@@ -190,6 +214,20 @@ def prepare_pair_splits(
     Returns:
         str: Path to the prepared dataset directory.
     """
+    parameters={'max_pos':max_pos,'neg_ratio':neg_ratio,'seed':seed,'sample_frac':sample_frac,
+                'sample_seed':sample_seed,'split_strategy':split_strategy}
+    input_hashes={'people_sha256':_sha256_file(people_csv),
+                  'labels_sha256':_sha256_file(labels_csv) if os.path.isfile(labels_csv) else None}
+    destination=Path(out_dir);manifest_path=destination/'split_manifest.json'
+    if destination.exists() and any(destination.iterdir()):
+        if not manifest_path.exists():raise ValueError('Preserve partial pair export; choose a new empty output directory')
+        saved=json.loads(manifest_path.read_text())
+        if saved.get('status')!='complete' or saved.get('parameters')!=parameters or any(saved.get(k)!=v for k,v in input_hashes.items()):
+            raise ValueError('Existing pair export has different or unbound inputs; choose a new empty output directory')
+        if any(not (destination/name).is_file() or _sha256_file(str(destination/name))!=digest
+               for name,digest in saved.get('output_sha256',{}).items()) or len(saved.get('output_sha256',{}))!=5:
+            raise ValueError('Existing pair export is incomplete or changed; preserve it and choose a new empty directory')
+        return out_dir
     os.makedirs(out_dir, exist_ok=True)
     people = pd.read_csv(people_csv, dtype=str, keep_default_na=False, low_memory=False)
     for c in [
@@ -216,7 +254,8 @@ def prepare_pair_splits(
         people = people.sample(frac=sample_frac, random_state=sample_seed).copy()
     gt = _load_gt(people_csv, labels_csv)
     gt = gt[gt["id"].isin(people["id"])].copy()
-    pairs = _pairs_from_clusters(people, gt, max_pos=max_pos, neg_ratio=neg_ratio, seed=seed)
+    if split_strategy not in {"temporal", "legacy_random_pairs"}:
+        raise ValueError(f"Unknown split strategy: {split_strategy}")
     # Build left/right tables with a simple 'text' attribute
     tbl = people[["id"]].copy()
     tbl["text"] = people.apply(_record_text, axis=1)
@@ -224,23 +263,43 @@ def prepare_pair_splits(
     right_fp = os.path.join(out_dir, "right.csv")
     tbl.to_csv(left_fp, index=False)
     tbl.to_csv(right_fp, index=False)
-    # Convert pairs to pair schema
-    pairs_dm = pairs[["left_id", "right_id", "label"]].copy()
-    pairs_dm = pairs_dm.rename(columns={"left_id": "ltable_id", "right_id": "rtable_id"})
-    pairs_dm.insert(0, "id", np.arange(1, len(pairs_dm) + 1))
-    idx = np.arange(len(pairs))
-    rng = np.random.default_rng(seed)
-    rng.shuffle(idx)
-    n = len(idx)
-    n_train = int(0.7 * n)
-    n_valid = int(0.15 * n)
-    splits = {
-        "train.csv": pairs_dm.iloc[idx[:n_train]].copy(),
-        "validation.csv": pairs_dm.iloc[idx[n_train : n_train + n_valid]].copy(),
-        "test.csv": pairs_dm.iloc[idx[n_train + n_valid :]].copy(),
-    }
+    def pair_table(frame, mapping=None):
+        local_gt = gt[gt.id.isin(frame.id)]
+        pairs = _pairs_from_clusters(frame, local_gt, max_pos=max_pos, neg_ratio=neg_ratio,
+                                     seed=seed, adjacent_waves=mapping)
+        result = pairs[["left_id", "right_id", "label"]].rename(
+            columns={"left_id": "ltable_id", "right_id": "rtable_id"})
+        result.insert(0, "id", np.arange(1, len(result) + 1))
+        return result
+    if split_strategy == "temporal":
+        if "heimild" not in people:
+            raise ValueError("Temporal pair construction requires census year (heimild)")
+        people["heimild"] = pd.to_numeric(people.heimild, errors="raise").astype(int)
+        waves = sorted(people.heimild.unique())
+        next_wave = dict(zip(waves, waves[1:]))
+        partitions = {"train.csv": people[people.heimild.le(1870)],
+                      "validation.csv": people[people.heimild.between(1871, 1890)],
+                      "test.csv": people[people.heimild.ge(1891)]}
+        splits = {name: pair_table(frame, next_wave) for name, frame in partitions.items()}
+        if any(frame.empty for frame in splits.values()):
+            raise ValueError("A temporal partition has no eligible adjacent-wave reference pairs")
+    else:
+        pairs_dm = pair_table(people)
+        idx = np.random.default_rng(seed).permutation(len(pairs_dm))
+        n_train, n_valid = int(.7 * len(idx)), int(.15 * len(idx))
+        splits = {"train.csv": pairs_dm.iloc[idx[:n_train]].copy(),
+                  "validation.csv": pairs_dm.iloc[idx[n_train:n_train+n_valid]].copy(),
+                  "test.csv": pairs_dm.iloc[idx[n_train+n_valid:]].copy()}
     for fn, df in splits.items():
         df.to_csv(os.path.join(out_dir, fn), index=False)
+    with open(os.path.join(out_dir, "split_manifest.json"), "w") as stream:
+        json.dump({'status':'complete','parameters':parameters,"split_strategy": split_strategy, "people_csv": os.path.abspath(people_csv),
+                   "labels_csv": os.path.abspath(labels_csv), "seed": seed,
+                   **input_hashes,
+                   'output_sha256':{name:_sha256_file(os.path.join(out_dir,name)) for name in [*splits,'left.csv','right.csv']},
+                   "reference_warning": "Reference IDs are not independently adjudicated historical truth; unknown IDs excluded from supervision",
+                   "counts": {name: {"pairs": len(frame), "reference_positive": int(frame.label.sum())}
+                              for name, frame in splits.items()}}, stream, indent=2)
     return out_dir
 
 
@@ -410,7 +469,7 @@ def prepare_ditto_data(people_csv: str, labels_csv: str, out_dir: str, max_pos: 
     """
     os.makedirs(out_dir, exist_ok=True)
     tmp_dm = os.path.join(out_dir, "_tmp_dm")
-    prepare_deepmatcher_data(people_csv, labels_csv, tmp_dm, max_pos=max_pos, neg_ratio=neg_ratio, seed=seed, sample_frac=sample_frac, sample_seed=sample_seed)
+    prepare_pair_splits(people_csv, labels_csv, tmp_dm, max_pos=max_pos, neg_ratio=neg_ratio, seed=seed, sample_frac=sample_frac, sample_seed=sample_seed)
     left = pd.read_csv(os.path.join(tmp_dm, "left.csv"))
     right = pd.read_csv(os.path.join(tmp_dm, "right.csv"))
     lmap = left.set_index("id")["text"].to_dict()
@@ -521,6 +580,17 @@ def _load_dm_splits(dataset_dir: str) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Da
     Returns:
         Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, Dict[int, str], Dict[int, str]]: Train/valid/test and id→text maps.
     """
+    manifest_path=Path(dataset_dir)/'split_manifest.json'
+    release_path=Path(dataset_dir).resolve().parent/'manifest.json'
+    if release_path.exists() and json.loads(release_path.read_text()).get('person_column_authoritative') and not manifest_path.exists():
+        raise ValueError('Selected-release pair export is incomplete: missing final split manifest')
+    if manifest_path.exists():
+        manifest=json.loads(manifest_path.read_text())
+        if 'output_sha256' in manifest:
+            if manifest.get('status')!='complete' or len(manifest['output_sha256'])!=5:
+                raise ValueError('Pair export is incomplete')
+            for name,digest in manifest['output_sha256'].items():
+                if _sha256_file(str(Path(dataset_dir)/name))!=digest:raise ValueError('Pair export changed after generation: '+name)
     left = pd.read_csv(os.path.join(dataset_dir, "left.csv"))
     right = pd.read_csv(os.path.join(dataset_dir, "right.csv"))
     lmap = left.set_index("id")["text"].to_dict()
