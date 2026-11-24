@@ -1,0 +1,228 @@
+table,row,metric,statistic,ona,llr,delta_ona_minus_llr
+controlled_and_audit,"Controlled pairs (test 3,600 x 3 seeds)",precision,mean,0.9302350909642817,0.9421592095471943,-0.011924118582912646
+controlled_and_audit,"Controlled pairs (test 3,600 x 3 seeds)",recall,mean,0.9952777777777778,0.9941666666666666,0.0011111111111111738
+controlled_and_audit,"Controlled pairs (test 3,600 x 3 seeds)",f1,mean,0.9616393078952626,0.9674476849354757,-0.005808377040213086
+controlled_and_audit,"Controlled pairs (test 3,600 x 3 seeds)",f1,sd,0.004899293145451067,0.005668773665787468,-0.000769480520336401
+controlled_and_audit,"Controlled pairs (test 3,600 x 3 seeds)",auc,mean,0.9942137731481481,0.9954246527777778,-0.0012108796296297353
+controlled_and_audit,"Controlled pairs (test 3,600 x 3 seeds)",average_precision,mean,0.9880708907664522,0.9904233240765796,-0.0023524333101274664
+controlled_and_audit,"Controlled pairs (test 3,600 x 3 seeds)",threshold,mean,0.26984399628266664,0.02076312465900267,0.24908087162366396
+controlled_and_audit,Audit provisional reference (136),f1,mean,0.3314036725801431,0.31725336810082577,0.01415030447931731
+controlled_and_audit,Audit provisional reference (136),f1,sd,0.020916144205936044,0.008280121200894218,0.012636023005041826
+controlled_and_audit,Audit provisional reference (136),provisional_different_linked,mean,72.33333333333333,80.0,-7.666666666666671
+controlled_and_audit,Audit inherited reference (136),f1,mean,0.7936351974671797,0.8409044068618536,-0.04726920939467394
+controlled_and_audit,Audit inherited reference (136),f1,sd,0.09322318274313776,0.0028557787455824215,0.09036740399755534
+controlled_and_audit,Audit inherited reference (136),provisional_different_linked,mean,72.33333333333333,80.0,-7.666666666666671
+audit_source_timing,full_provisional,f1,mean,0.3314036725801431,0.31725336810082577,0.01415030447931731
+audit_source_timing,full_provisional,provisional_different_linked,mean,72.33333333333333,80.0,-7.666666666666671
+audit_source_timing,exclude_nominal1816,f1,mean,0.33773633773633777,0.3227386306846577,0.014997707051680076
+audit_source_timing,exclude_nominal1816,provisional_different_linked,mean,70.33333333333333,78.0,-7.666666666666671
+audit_source_timing,exclude_source_uncertain_jon,f1,mean,0.3314036725801431,0.31725336810082577,0.01415030447931731
+audit_source_timing,exclude_source_uncertain_jon,provisional_different_linked,mean,72.33333333333333,80.0,-7.666666666666671
+publication_trained_graph,"Controlled-trained, candidate graph test",f1,mean,0.8113262178444737,0.8080341835596357,0.0032920342848379303
+publication_trained_graph,"Controlled-trained, candidate graph test",f1,sd,0.009665277089182394,0.010839319699274413,-0.0011740426100920187
+publication_trained_graph,"Controlled-trained, candidate graph test",average_precision,mean,0.833424398855831,0.8503372863623785,-0.016912887506547514
+publication_trained_graph,"Controlled-trained, candidate graph test",b3_precision,mean,0.9581151994547064,0.9548495449122137,0.003265654542492613
+publication_trained_graph,"Controlled-trained, candidate graph test",b3_recall,mean,0.8677145838960959,0.8679910651947633,-0.0002764812986674192
+publication_trained_graph,"Controlled-trained, candidate graph test",b3_f1,mean,0.9106733627345349,0.9093499193937667,0.0013234433407681712
+publication_trained_graph,"Controlled-trained, candidate graph test",b3_f1,sd,0.0024516933090765075,0.002803777001774324,-0.00035208369269781664
+publication_trained_graph,"Controlled-trained, candidate graph test",ari,mean,0.6667449596495509,0.6495273145203121,0.017217645129238845
+publication_trained_graph,"Controlled-trained, candidate graph test",partition_pair_f1,mean,0.6667969089146702,0.6495834219537174,0.017213486960952817
+candidate_graph,Candidate-matched training (Table: graph),f1,mean,0.9180866781807877,0.9078530137504264,0.010233664430361333
+candidate_graph,Candidate-matched training (Table: graph),f1,sd,0.003445685275202781,0.011251015561298674,-0.007805330286095893
+candidate_graph,Candidate-matched training (Table: graph),average_precision,mean,0.9697784572084074,0.9706628120951105,-0.0008843548867031314
+candidate_graph,Candidate-matched training (Table: graph),b3_precision,mean,0.9923794027634484,0.9835946869592528,0.008784715804195597
+candidate_graph,Candidate-matched training (Table: graph),b3_recall,mean,0.897925455500815,0.8991401645509081,-0.0012147090500930213
+candidate_graph,Candidate-matched training (Table: graph),b3_f1,mean,0.9427892358220222,0.9394398671078187,0.003349368714203549
+candidate_graph,Candidate-matched training (Table: graph),b3_f1,sd,0.0010353436184131768,0.0032948525813127805,-0.0022595089628996037
+candidate_graph,Candidate-matched training (Table: graph),ari,mean,0.8283022688484131,0.8103477599583258,0.017954508890087317
+candidate_graph,Candidate-matched training (Table: graph),partition_pair_f1,mean,0.8283260332556853,0.8103750295519304,0.01795100370375491
+candidate_graph,Candidate-matched training (Table: graph),partition_pair_f1,sd,0.006430659849546095,0.017692035804900832,-0.011261375955354737
+candidate_graph,Candidate-matched training (Table: graph),largest_component,mean,5.666666666666667,6.666666666666667,-1.0
+candidate_graph,Candidate-matched training (Table: graph),auc,mean,0.9993484573078771,0.9994251402967645,-7.668298888741099e-05
+candidate_graph,Candidate-matched training (Table: graph),p_at_k,mean,0.8738980099042818,0.8733100473366019,0.0005879625676799005
+ablations,Without names,f1,mean,0.9358606412124644,0.9348846357154187,0.0009760054970456844
+ablations,Without names,f1,sd,0.002821685258899185,0.0026054177707937613,0.00021626748810542372
+ablations,Without names,auc,mean,0.9893399305555556,0.9893951388888889,-5.520833333327868e-05
+ablations,Without names,delta_f1_vs_full,mean,-0.025778666682798268,-0.03256304922005704,0.006784382537258771
+ablations,Without geography,f1,mean,0.9744839763473147,0.9693828985864384,0.005101077760876205
+ablations,Without geography,f1,sd,0.001063297698810803,0.006939559512866526,-0.005876261814055723
+ablations,Without geography,auc,mean,0.9966163773148148,0.9965637152777779,5.266203703691019e-05
+ablations,Without geography,delta_f1_vs_full,mean,0.01284466845205201,0.0019352136509627194,0.010909454801089291
+ablations,Without birth year,f1,mean,0.8911626455094588,0.8951323112155686,-0.003969665706109793
+ablations,Without birth year,f1,sd,0.006135613840665885,0.0055802088167061625,0.0005554050239597224
+ablations,Without birth year,auc,mean,0.9802240162037038,0.9808616319444444,-0.0006376157407406158
+ablations,Without birth year,delta_f1_vs_full,mean,-0.07047666238580386,-0.07231537371990715,0.0018387113341032935
+ablations,Without sex,f1,mean,0.9616393078952626,0.9674476849354757,-0.005808377040213086
+ablations,Without sex,f1,sd,0.004899293145451067,0.005668773665787468,-0.000769480520336401
+ablations,Without sex,auc,mean,0.9942182870370372,0.9954241898148147,-0.0012059027777775455
+ablations,Without sex,delta_f1_vs_full,mean,0.0,0.0,0.0
+ablations,Without census wave,f1,mean,0.9616393078952626,0.9674476849354757,-0.005808377040213086
+ablations,Without census wave,f1,sd,0.004899293145451067,0.005668773665787468,-0.000769480520336401
+ablations,Without census wave,auc,mean,0.9942188657407408,0.9954246527777778,-0.0012057870370369983
+ablations,Without census wave,delta_f1_vs_full,mean,0.0,0.0,0.0
+calibration,Controlled pairs / raw,f1,mean,0.9616393078952626,0.9674476849354757,-0.005808377040213086
+calibration,Controlled pairs / raw,brier,mean,0.060373138867301335,0.04817750992802886,0.012195628939272472
+calibration,Controlled pairs / raw,log_loss,mean,0.23433094885835926,0.19945854294832777,0.03487240591003149
+calibration,Controlled pairs / sigmoid,f1,mean,0.9616393078952626,0.9674476849354757,-0.005808377040213086
+calibration,Controlled pairs / sigmoid,brier,mean,0.027166628771789034,0.0242712005498194,0.002895428221969632
+calibration,Controlled pairs / sigmoid,log_loss,mean,0.09791963602137681,0.08824992803029619,0.00966970799108062
+calibration,Controlled pairs / isotonic,f1,mean,0.9633156501827003,0.9679695460796957,-0.004653895896995386
+calibration,Controlled pairs / isotonic,brier,mean,0.021783880941584597,0.0186745516188653,0.0031093293227192967
+calibration,Controlled pairs / isotonic,log_loss,mean,0.09567583333340457,0.0897347367831721,0.005941096550232464
+calibration,Candidate graph (candidate-trained) / raw,f1,mean,0.9180866781807877,0.9078530137504264,0.010233664430361333
+calibration,Candidate graph (candidate-trained) / raw,brier,mean,0.012928144467779798,0.0042070014871769005,0.008721142980602899
+calibration,Candidate graph (candidate-trained) / raw,log_loss,mean,0.1025776782609543,0.02031346268138297,0.08226421557957134
+calibration,Candidate graph (candidate-trained) / sigmoid,f1,mean,0.9180866781807877,0.9078530137504264,0.010233664430361333
+calibration,Candidate graph (candidate-trained) / sigmoid,brier,mean,0.0023274516822856003,0.0023723444302618996,-4.489274797629932e-05
+calibration,Candidate graph (candidate-trained) / sigmoid,log_loss,mean,0.008292925271867334,0.007779932318951,0.0005129929529163338
+calibration,Candidate graph (candidate-trained) / isotonic,f1,mean,0.9157549923859202,0.9105741415080053,0.0051808508779148665
+calibration,Candidate graph (candidate-trained) / isotonic,brier,mean,0.0016699557073118333,0.0017134533566136,-4.349764930176663e-05
+calibration,Candidate graph (candidate-trained) / isotonic,log_loss,mean,0.0060379671935955,0.005977937587529535,6.002960606596528e-05
+calibration,Candidate graph (controlled-trained) / raw,f1,mean,0.8113262178444737,0.8080341835596357,0.0032920342848379303
+calibration,Candidate graph (controlled-trained) / raw,brier,mean,0.037963874155901335,0.014950105279305766,0.02301376887659557
+calibration,Candidate graph (controlled-trained) / raw,log_loss,mean,0.20002949852482424,0.07416110862705454,0.12586838989776972
+calibration,Candidate graph (controlled-trained) / sigmoid,f1,mean,0.8113262178444737,0.8080341835596357,0.0032920342848379303
+calibration,Candidate graph (controlled-trained) / sigmoid,brier,mean,0.0052225797314783,0.005601122595281734,-0.0003785428638034341
+calibration,Candidate graph (controlled-trained) / sigmoid,log_loss,mean,0.021949976324707632,0.020751640939943,0.0011983353847646316
+calibration,Candidate graph (controlled-trained) / isotonic,f1,mean,0.8127839738057988,0.8013372466087288,0.011446727197069961
+calibration,Candidate graph (controlled-trained) / isotonic,brier,mean,0.004474312663824833,0.0046139831194679,-0.00013967045564306727
+calibration,Candidate graph (controlled-trained) / isotonic,log_loss,mean,0.016589903142237298,0.015772346639266435,0.0008175565029708634
+threshold_policy,fixed_0.5,f1,mean,0.8707392938494408,0.9172682209681532,-0.04652892711871237
+threshold_policy,fixed_0.5,f1,sd,0.0012253687155061959,0.0022797863062519893,-0.0010544175907457934
+threshold_policy,fixed_0.5,threshold,mean,0.5,0.5,0.0
+threshold_policy,training_f1,f1,mean,0.9633156501827003,0.937419122909918,0.025896527272782244
+threshold_policy,training_f1,f1,sd,0.004304231146381792,0.03167014974647369,-0.0273659186000919
+threshold_policy,training_f1,threshold,mean,0.2918934426233333,0.18170482956681908,0.1101886130565142
+threshold_policy,selection_f1,f1,mean,0.9616393078952626,0.9674476849354757,-0.005808377040213086
+threshold_policy,selection_f1,f1,sd,0.004899293145451067,0.005668773665787468,-0.000769480520336401
+threshold_policy,selection_f1,threshold,mean,0.26984399628266664,0.02076312465900267,0.24908087162366396
+locked_assessment,controlled,f1,mean,0.9675102831910962,0.9751998084067125,-0.0076895252156162774
+locked_assessment,controlled,f1,sd,0.002157977785360462,0.008978260213784405,-0.006820282428423943
+locked_assessment,controlled,auc,mean,0.9959708333333331,0.9968973379629628,-0.0009265046296296209
+locked_assessment,controlled,brier,mean,0.05838135756740776,0.042633661669626004,0.015747695897781758
+locked_assessment,controlled,log_loss,mean,0.2282576019852014,0.16870322874786736,0.059554373237334035
+locked_assessment,candidate,f1,mean,0.9071712336167419,0.8939179521046589,0.013253281512083048
+locked_assessment,candidate,f1,sd,0.0017310287448589156,0.019493299456223155,-0.01776227071136424
+locked_assessment,candidate,auc,mean,0.9990569746562358,0.9991181834093039,-6.120875306814266e-05
+locked_assessment,candidate,brier,mean,0.013152120229992065,0.0046646315947576,0.008487488635234465
+locked_assessment,candidate,log_loss,mean,0.103347404978078,0.0211720515601509,0.0821753534179271
+locked_assessment,candidate,b3_f1,mean,0.9762881235550355,0.9733700454833644,0.002918078071671104
+locked_assessment,candidate,b3_f1,sd,0.0003634493791807542,0.004327360722225781,-0.003963911343045026
+locked_assessment,candidate,ari,mean,0.8511333327157152,0.8178051618327181,0.03332817088299711
+locked_assessment,candidate,p_at_k,mean,0.8628777627424448,0.8624267027514659,0.00045105999097883043
+locked_calibration,controlled / sigmoid,brier,mean,0.022780189875830734,0.018943528759594565,0.003836661116236168
+locked_calibration,controlled / sigmoid,log_loss,mean,0.07476756008557663,0.0606728567019005,0.014094703383676126
+locked_calibration,controlled / sigmoid,f1,mean,0.9675102831910962,0.9751998084067125,-0.0076895252156162774
+locked_calibration,controlled / isotonic,brier,mean,0.01696559324266723,0.0138381615882532,0.0031274316544140316
+locked_calibration,controlled / isotonic,log_loss,mean,0.055061109505231604,0.05276267686757424,0.0022984326376573605
+locked_calibration,controlled / isotonic,f1,mean,0.9699918896999188,0.9750606402142324,-0.005068750514313658
+locked_calibration,candidate / sigmoid,brier,mean,0.0019269305740592,0.0019842139820017667,-5.728340794256665e-05
+locked_calibration,candidate / sigmoid,log_loss,mean,0.007590332901478367,0.0070747302726525,0.0005156026288258668
+locked_calibration,candidate / sigmoid,f1,mean,0.9071712336167419,0.8939179521046589,0.013253281512083048
+locked_calibration,candidate / isotonic,brier,mean,0.0015758286111993668,0.0016215082449409334,-4.567963374156668e-05
+locked_calibration,candidate / isotonic,log_loss,mean,0.006040435209079299,0.0063914112717409,-0.000350976062661601
+locked_calibration,candidate / isotonic,f1,mean,0.9036416165467663,0.8825398631434419,0.02110175340332443
+component_bootstrap,locked_controlled,f1_interval_low,2.5%,0.9576074017601583,0.9800379515404739,-0.022430549780315556
+component_bootstrap,locked_controlled,f1_interval_high,97.5%,0.9742143360272305,0.990614149367082,-0.01639981333985152
+component_bootstrap,locked_controlled,paired_delta_ona_minus_llr_low,2.5%,-0.025588644152884206,0.0,-0.025588644152884206
+component_bootstrap,locked_controlled,paired_delta_ona_minus_llr_high,97.5%,-0.012846431707874325,0.0,-0.012846431707874325
+component_bootstrap,publication_test,f1_interval_low,2.5%,0.9473759203638868,0.9676246329946986,-0.020248712630811738
+component_bootstrap,publication_test,f1_interval_high,97.5%,0.9643193185853003,0.9802026038547696,-0.01588328526946936
+component_bootstrap,publication_test,paired_delta_ona_minus_llr_low,2.5%,-0.02373306146558335,0.0,-0.02373306146558335
+component_bootstrap,publication_test,paired_delta_ona_minus_llr_high,97.5%,-0.012393111369269502,0.0,-0.012393111369269502
+external_official_splits,abt_buy,precision,mean,0.4627,0.4257,0.03699999999999998
+external_official_splits,abt_buy,recall,mean,0.301,0.3058,-0.0048000000000000265
+external_official_splits,abt_buy,f1,mean,0.3647,0.3559,0.00880000000000003
+external_official_splits,abt_buy,accuracy,mean,0.8873,0.881,0.006299999999999972
+external_official_splits,abt_buy,threshold,mean,0.235,0.24,-0.0050000000000000044
+external_official_splits,abt_buy,auc,mean,0.7095,0.6983,0.011199999999999988
+external_official_splits,abt_buy,auc_tie_averaged,mean,0.7106923863055699,0.6994620450803383,0.011230341225231588
+external_official_splits,abt_buy,ari_cc,mean,0.4377,0.3942,0.04349999999999998
+external_official_splits,abt_buy,ari_ag,mean,0.6772,0.6544,0.022800000000000042
+external_official_splits,abt_buy,p_at_k,mean,0.3447,0.3447,0.0
+external_official_splits,abt_buy,r_at_k,mean,0.3447,0.3447,0.0
+external_official_splits,abt_buy,average_precision,mean,0.3064692071765821,0.3353463084514466,-0.02887710127486448
+external_official_splits,amazon_google,precision,mean,0.3946,0.4679,-0.07329999999999998
+external_official_splits,amazon_google,recall,mean,0.4402,0.4359,0.0042999999999999705
+external_official_splits,amazon_google,f1,mean,0.4162,0.4513,-0.035099999999999965
+external_official_splits,amazon_google,accuracy,mean,0.874,0.8918,-0.017800000000000038
+external_official_splits,amazon_google,threshold,mean,0.23,0.265,-0.035
+external_official_splits,amazon_google,auc,mean,0.8232,0.8291,-0.005899999999999905
+external_official_splits,amazon_google,auc_tie_averaged,mean,0.8241730073930171,0.8301214596746409,-0.005948452281623773
+external_official_splits,amazon_google,ari_cc,mean,0.3732,0.4793,-0.10610000000000003
+external_official_splits,amazon_google,ari_ag,mean,0.6245,0.6366,-0.0121
+external_official_splits,amazon_google,p_at_k,mean,0.4017,0.4573,-0.05559999999999998
+external_official_splits,amazon_google,r_at_k,mean,0.4017,0.4573,-0.05559999999999998
+external_official_splits,amazon_google,average_precision,mean,0.3527609071905211,0.3794830249341752,-0.026722117743654072
+external_official_splits,dblp_acm,precision,mean,0.9837,0.9295,0.054200000000000026
+external_official_splits,dblp_acm,recall,mean,0.9527,0.9797,-0.027000000000000024
+external_official_splits,dblp_acm,f1,mean,0.968,0.9539,0.014100000000000001
+external_official_splits,dblp_acm,accuracy,mean,0.9887,0.983,0.005700000000000038
+external_official_splits,dblp_acm,threshold,mean,0.51,0.92,-0.41000000000000003
+external_official_splits,dblp_acm,auc,mean,0.997,0.9972,-0.00019999999999997797
+external_official_splits,dblp_acm,auc_tie_averaged,mean,0.997041768234474,0.9971871822537176,-0.00014541401924361708
+external_official_splits,dblp_acm,ari_cc,mean,0.9906,0.8716,0.119
+external_official_splits,dblp_acm,ari_ag,mean,0.9929,0.9775,0.01539999999999997
+external_official_splits,dblp_acm,p_at_k,mean,0.9572,0.9572,0.0
+external_official_splits,dblp_acm,r_at_k,mean,0.9572,0.9572,0.0
+external_official_splits,dblp_acm,average_precision,mean,0.9696304178171328,0.9710033956317616,-0.0013729778146288618
+external_official_splits,dblp_scholar,precision,mean,0.8554,0.8235,0.03190000000000004
+external_official_splits,dblp_scholar,recall,mean,0.9009,0.9159,-0.015000000000000013
+external_official_splits,dblp_scholar,f1,mean,0.8776,0.8673,0.010300000000000087
+external_official_splits,dblp_scholar,accuracy,mean,0.9532,0.9478,0.005400000000000071
+external_official_splits,dblp_scholar,threshold,mean,0.325,0.71,-0.38499999999999995
+external_official_splits,dblp_scholar,auc,mean,0.9812,0.9832,-0.0020000000000000018
+external_official_splits,dblp_scholar,auc_tie_averaged,mean,0.9810958704071182,0.9830632481436437,-0.001967377736525444
+external_official_splits,dblp_scholar,ari_cc,mean,0.7965,0.6852,0.11129999999999995
+external_official_splits,dblp_scholar,ari_ag,mean,0.7907,0.7521,0.03859999999999997
+external_official_splits,dblp_scholar,p_at_k,mean,0.8626,0.8804,-0.017799999999999927
+external_official_splits,dblp_scholar,r_at_k,mean,0.8626,0.8804,-0.017799999999999927
+external_official_splits,dblp_scholar,average_precision,mean,0.9165056379154778,0.9415423585685444,-0.025036720653066613
+external_official_splits,itunes_amazon,precision,mean,1.0,1.0,0.0
+external_official_splits,itunes_amazon,recall,mean,0.8519,1.0,-0.1481
+external_official_splits,itunes_amazon,f1,mean,0.92,1.0,-0.07999999999999996
+external_official_splits,itunes_amazon,accuracy,mean,0.9633,1.0,-0.036699999999999955
+external_official_splits,itunes_amazon,threshold,mean,0.52,0.95,-0.42999999999999994
+external_official_splits,itunes_amazon,auc,mean,1.0,1.0,0.0
+external_official_splits,itunes_amazon,auc_tie_averaged,mean,1.0,1.0,0.0
+external_official_splits,itunes_amazon,ari_cc,mean,1.0,1.0,0.0
+external_official_splits,itunes_amazon,ari_ag,mean,1.0,1.0,0.0
+external_official_splits,itunes_amazon,p_at_k,mean,1.0,1.0,0.0
+external_official_splits,itunes_amazon,r_at_k,mean,1.0,1.0,0.0
+external_official_splits,itunes_amazon,average_precision,mean,1.0,1.0,0.0
+external_official_splits,walmart_amazon,precision,mean,0.8054,0.9483,-0.14290000000000003
+external_official_splits,walmart_amazon,recall,mean,0.6218,0.5699,0.05190000000000006
+external_official_splits,walmart_amazon,f1,mean,0.7018,0.712,-0.010199999999999987
+external_official_splits,walmart_amazon,accuracy,mean,0.9502,0.9566,-0.006399999999999961
+external_official_splits,walmart_amazon,threshold,mean,0.19,0.895,-0.7050000000000001
+external_official_splits,walmart_amazon,auc,mean,0.9089,0.9112,-0.0022999999999999687
+external_official_splits,walmart_amazon,auc_tie_averaged,mean,0.9084177349472932,0.91080461631231,-0.0023868813650168574
+external_official_splits,walmart_amazon,ari_cc,mean,0.882,0.9733,-0.09130000000000005
+external_official_splits,walmart_amazon,ari_ag,mean,0.902,0.9733,-0.07130000000000003
+external_official_splits,walmart_amazon,p_at_k,mean,0.6632,0.6788,-0.015599999999999947
+external_official_splits,walmart_amazon,r_at_k,mean,0.6632,0.6788,-0.015599999999999947
+external_official_splits,walmart_amazon,average_precision,mean,0.7509220953619146,0.7488986376536542,0.002023457708260401
+external_official_splits,beer,precision,mean,0.6842,0.75,-0.06579999999999997
+external_official_splits,beer,recall,mean,0.9286,0.8571,0.07150000000000001
+external_official_splits,beer,f1,mean,0.7879,0.8,-0.0121
+external_official_splits,beer,accuracy,mean,0.9231,0.9341,-0.01100000000000001
+external_official_splits,beer,threshold,mean,0.19,0.91,-0.72
+external_official_splits,beer,auc,mean,0.9777,0.9824,-0.0047000000000000375
+external_official_splits,beer,auc_tie_averaged,mean,0.9772727272727272,0.9819109461966604,-0.004638218923933235
+external_official_splits,beer,ari_cc,mean,0.8083,0.8531,-0.04479999999999995
+external_official_splits,beer,ari_ag,mean,0.8083,0.8531,-0.04479999999999995
+external_official_splits,beer,p_at_k,mean,0.7857,0.7857,0.0
+external_official_splits,beer,r_at_k,mean,0.7857,0.7857,0.0
+external_official_splits,beer,average_precision,mean,0.8639766979052694,0.8917507930665824,-0.027774095161313017
+external_official_splits,fodors_zagats,precision,mean,1.0,0.9565,0.04349999999999998
+external_official_splits,fodors_zagats,recall,mean,0.8636,1.0,-0.13639999999999997
+external_official_splits,fodors_zagats,f1,mean,0.9268,0.9778,-0.051000000000000045
+external_official_splits,fodors_zagats,accuracy,mean,0.9841,0.9947,-0.010600000000000054
+external_official_splits,fodors_zagats,threshold,mean,0.42,0.93,-0.51
+external_official_splits,fodors_zagats,auc,mean,1.0,1.0,0.0
+external_official_splits,fodors_zagats,auc_tie_averaged,mean,1.0,1.0,0.0
+external_official_splits,fodors_zagats,ari_cc,mean,1.0,0.9773,0.022700000000000053
+external_official_splits,fodors_zagats,ari_ag,mean,1.0,0.9773,0.022700000000000053
+external_official_splits,fodors_zagats,p_at_k,mean,1.0,1.0,0.0
+external_official_splits,fodors_zagats,r_at_k,mean,1.0,1.0,0.0
+external_official_splits,fodors_zagats,average_precision,mean,0.9999999999999998,1.0,-2.220446049250313e-16
