@@ -38,7 +38,7 @@ Official-split baseline reruns:
 
 | File | Purpose |
 |---|---|
-| `run_official_baselines.py` | Fellegi-Sunter, Ditto, ZeroER and AnyMatch on the official DeepMatcher splits of seven benchmarks, through the Fodors-Zagats driver (`run_fodors_official.py`) re-targeted per dataset (AnyMatch was not rerun for the reported results). Ditto may accumulate gradients at the same effective batch; ZeroER self-joins records of the test pairs. |
+| `run_official_baselines.py` | Fellegi-Sunter, Ditto, ZeroER and AnyMatch on the official DeepMatcher splits of seven benchmarks, through the Fodors-Zagats driver (`run_fodors_official.py`) re-targeted per dataset. AnyMatch leaves both DBLP domains out of training when either is the target, and may use activation checkpointing under a GPU-memory cap. Ditto may accumulate gradients at the same effective batch; ZeroER self-joins records of the test pairs. |
 | `verify_official_baselines.py` | Recomputes every reported cell from the saved predictions and checks the test split, decision rule and hashes. |
 
 ## Expected workspace layout

@@ -24,6 +24,11 @@ Per-dataset differences from the Fodors-Zagats driver (everything else is its co
   preprocess.ipynb magellan_rename_columns / magellan_drop_columns (as prepare_anymatch_transfer.py),
   checked text-for-text against AnyMatch's serialization of its prepared test file. Leave-one-out
   removes the target domain from training rows, attribute pairs and external validation.
+* AnyMatch DBLP rule (owner decision): DBLP-ACM and DBLP-Scholar share the DBLP table, so standard
+  leave-one-out leaks target test titles through the sibling domain (748 DBLP-ACM / 964 DBLP-Scholar
+  test titles in the frozen standard-LOO training corpora). For either DBLP target both DBLP domains
+  (dbac, dbgo) are removed from training and validation; every other target uses standard leave-one-out.
+  Each freeze counts the target's test titles found in its own external corpora (leave_one_out_check).
 
 Outputs: experiments/completion/official-baselines/<method>/<dataset>/ and
 experiments/completion/official_baselines.csv (summarize).
@@ -53,6 +58,8 @@ DATASETS = list(OFFICIAL_TEST)
 ANYMATCH_CODE = {"abt_buy": "abt", "amazon_google": "amgo", "dblp_acm": "dbac", "dblp_scholar": "dbgo",
                  "itunes_amazon": "itam", "walmart_amazon": "waam", "beer": "beer"}
 METHOD_FOLDERS = {"fellegi_sunter": "fellegi_sunter", "ditto": "ditto", "zeroer": "zeroer", "anymatch": "anymatch"}
+DBLP = ["dblp_acm", "dblp_scholar"]  # share the DBLP table: the AnyMatch DBLP rule removes both for either target
+DBLP_STANDARD_LOO_LEAK = {"dblp_acm": 748, "dblp_scholar": 964}  # test titles in the standard-LOO training corpus
 
 
 def expected_test(dataset):
@@ -343,6 +350,34 @@ def anymatch_target(api, tokenizer):
     return serialized, test, source, columns
 
 
+def anymatch_left_out(dataset):
+    """AnyMatch source domains removed for this target: the target, and for a DBLP target both DBLP domains."""
+    return [ANYMATCH_CODE[d] for d in DBLP] if dataset in DBLP else [ANYMATCH_CODE[dataset]]
+
+
+def anymatch_rule_note(dataset):
+    if dataset not in DBLP:
+        return "standard leave-one-out: only the target domain is removed from AnyMatch training and validation"
+    sibling = next(d for d in DBLP if d != dataset)
+    return (f"DBLP rule (owner decision): {dataset} shares the DBLP table with {sibling}, so standard leave-one-out "
+            f"leaks {DBLP_STANDARD_LOO_LEAK[dataset]} {dataset} test titles into training; both DBLP domains "
+            f"({', '.join(anymatch_left_out(dataset))}) are excluded from AnyMatch training and validation")
+
+
+def target_title_overlap(tables, pairs, frames):
+    """Target test records (first attribute, >= 12 characters, as AnyMatch serializes it) found verbatim in each
+    external corpus; the same count as the frozen leave-one-out check that measured the DBLP leak."""
+    first = tables["tableA"].columns[0]
+    test = pairs["test"]
+    values = sorted({str(v).strip().lower() for side, col in [("tableA", "ltable_id"), ("tableB", "rtable_id")]
+                     for v in tables[side].loc[test[col], first] if len(str(v).strip()) >= 12})
+    counts = {"field": first, "distinct_test_values": len(values)}
+    for name, frame in frames.items():
+        text = "\n".join(frame.text.str.lower())
+        counts[name] = sum(1 for v in values if f"col {v}," in text or f"col {v}</p>" in text)
+    return counts
+
+
 def anymatch_freeze(dataset, work: Path, checkpointing=False):
     """run_fodors_official.anymatch_freeze for this target, with the protocol's target description corrected.
 
@@ -350,7 +385,18 @@ def anymatch_freeze(dataset, work: Path, checkpointing=False):
     checkpointing; recomputation restores the dropout RNG state, so the updates are the same arithmetic) to fit
     a ~4 GiB share of the desktop RTX 3080; recorded as a resource deviation."""
     protocol_dir = work / dataset / "anymatch/protocol"
-    fo.anymatch_freeze(protocol_dir)
+    api, _ = fo.anymatch_api()
+    left_out = anymatch_left_out(dataset)
+    original = api.MAGELLAN
+    if not set(left_out) <= set(original):
+        raise ValueError(f"{left_out} are not all AnyMatch source domains {list(original)}")
+    # fo.anymatch_freeze removes the target itself (official loo.py get_loo_dirs); the DBLP sibling goes here.
+    api.MAGELLAN = {k: v for k, v in original.items() if k not in left_out or k == fo.ANYMATCH_LEAVE_OUT}
+    try:
+        fo.anymatch_freeze(protocol_dir)
+    finally:
+        api.MAGELLAN = original
+    sources = [k for k in list(original) + ["wdc"] if k not in left_out]
     import pandas as pd  # noqa: F401  (after run_anymatch_transfer, imported by anymatch_api)
     tables, pairs, _ = fo.official_split()
     rename, drop = anymatch_columns(tables)
@@ -368,14 +414,26 @@ def anymatch_freeze(dataset, work: Path, checkpointing=False):
                               for d in protocol["deviations"]]
     if not any(domain in d for d in protocol["deviations"]):
         raise RuntimeError("Leave-one-out deviation text not found in the frozen protocol")
+    if dataset in DBLP:
+        eight = "the other eight source domains"
+        if sum(eight in d for d in protocol["deviations"]) != 1:
+            raise RuntimeError("Source-domain count text not found in the frozen protocol")
+        protocol["deviations"] = [d.replace(eight, "the other seven source domains (DBLP rule)") for d in protocol["deviations"]]
+        protocol["deviations"].append(anymatch_rule_note(dataset) + " (rows, attribute pairs, AutoML receipts).")
+        protocol["automl_receipts"] = {k: v for k, v in protocol["automl_receipts"].items()
+                                       if not any(f"/{code}/" in k for code in left_out)}
     if checkpointing:
         protocol["gradient_checkpointing"] = True
         protocol["deviations"].append("Resource only: gradient checkpointing on (activation recomputation, same "
                                       "updates) to fit a ~4 GiB share of a 10 GiB RTX 3080; batch, data and optimizer unchanged.")
+    overlap = target_title_overlap(tables, pairs, {"external_train": train, "external_valid": valid})
     protocol["leave_one_out_check"] = {"external_train_rows": len(train), "external_valid_rows": len(valid),
+                                       "left_out_domains": left_out, "source_domains": sources,
+                                       "rule": anymatch_rule_note(dataset), "target_test_titles_in_corpus": overlap,
                                        "driver_sha256": fo.sha256(Path(__file__))}
     fo.dump_json(path, protocol)
-    print(json.dumps({"target": protocol["target"], "target_fields": protocol["target_fields"]}))
+    print(json.dumps({"target": protocol["target"], "target_fields": protocol["target_fields"],
+                      "leave_one_out_check": protocol["leave_one_out_check"]}))
 
 
 ANYMATCH_RAM_GATE_GIB = 3.0
@@ -432,7 +490,19 @@ def anymatch_score(dataset, work: Path, seed: int):
     start = time.time()
     output = output_dir("anymatch", dataset)
     model_dir = work / dataset / f"anymatch/seed_{seed}"
-    fo.anymatch_score(output, work / dataset / "anymatch/protocol", model_dir)
+    protocol_dir = work / dataset / "anymatch/protocol"
+    fo.anymatch_score(output, protocol_dir, model_dir)
+    check = json.loads((protocol_dir / "protocol.json").read_text())["leave_one_out_check"]
+    if check["left_out_domains"] != anymatch_left_out(dataset):
+        raise RuntimeError(f"Protocol left out {check['left_out_domains']}, the rule requires {anymatch_left_out(dataset)}")
+    result = json.loads((output / "result.json").read_text())
+    words = {7: "seven", 8: "eight"}
+    result["protocol"]["transfer"] = (f"leave-one-out: trained on the {words[len(check['source_domains'])]} other AnyMatch "
+                                      f"source domains ({', '.join(check['source_domains'])})")
+    result["protocol"]["serializer"] = result["protocol"]["serializer"].replace("Fodors-Zagats", dataset)
+    result["notes"] = [check["rule"], f"target test titles found in the external corpora: "
+                       f"{json.dumps(check['target_test_titles_in_corpus'])}"]
+    fo.dump_json(output / "result.json", result)
     adaptation = json.loads((model_dir / "resource_gate_adaptation.json").read_text())
     fo.dump_json(output / "source_fit/resource_gate_adaptation.json", adaptation)
     stamp(output, start, {"resource_gate_adaptation": adaptation})
@@ -443,7 +513,7 @@ PROTOCOL_NOTES = {
     "fellegi_sunter": "Smoothed m/u agreement model over every attribute except id; fit on train; validation-F1 threshold (run_baseline_eval evaluator)",
     "ditto": fo.PROTOCOL_NOTES["ditto"],
     "zeroer": "Official ZeroER, Magellan similarity features, two-table mode with transitivity; L-R candidates = official test pairs; unsupervised, posterior 0.5",
-    "anymatch": "AnyMatch GPT-2 leave-one-out transfer from the eight other source domains; external-validation checkpoint; fixed 0.5; one source fit",
+    "anymatch": "AnyMatch GPT-2 leave-one-out transfer from the other source domains (eight; seven for DBLP targets: both DBLP domains removed); external-validation checkpoint; fixed 0.5; one source fit",
 }
 
 
@@ -472,6 +542,7 @@ def summarize():
                 notes.append(f"self-joins {r['self_join_mode']} ({sizes} L-L/R-R candidates; {r['self_join_blocking']}); 0 test pairs dropped")
             if method == "anymatch":
                 notes.append(f"checkpoint epoch {r['best_epoch']} of {r['epochs_run']}, external validation F1 {r['best_external_validation_f1']:.4f}")
+                notes.extend(r.get("notes", []))
             seeds = r["seeds"]
             rows.append({"method": method, "dataset": dataset,
                          "seeds": ";".join(map(str, seeds)) if isinstance(seeds, list) else "deterministic",
